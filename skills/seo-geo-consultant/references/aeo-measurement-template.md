@@ -81,3 +81,8 @@ Tag every recommendation in your roadmap:
 - **Experimental**: Emerging tactic; monitor and validate before scaling
 
 Use this to avoid overcommitting to unproven GEO tactics.
+## 6) Governance Links
+
+- Confidence/evidence standards: `references/evidence-policy.md`
+- Standard final output format: `references/audit-report-template.md`
+

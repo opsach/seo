@@ -182,6 +182,14 @@ Use this checklist systematically when performing a full site audit. Check each 
 - [ ] AI referral traffic segmented in analytics (`chat.openai.com`, `perplexity.ai`, etc.)
 - [ ] Optimization backlog linked to measurement deltas (what changed, what improved)
 
+## 9. Audit Deliverable Quality Gates
+
+- [ ] Final report uses `references/audit-report-template.md` structure
+- [ ] Every finding includes owner + ETA
+- [ ] Every finding includes impact and effort score
+- [ ] Implementation order ranked using impact/effort score
+- [ ] Quarterly baseline metrics captured before roadmap approval
+
 ## Scoring Guide
 
 After completing the audit, assign a GEO Readiness Score:
