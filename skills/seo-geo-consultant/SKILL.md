@@ -31,9 +31,11 @@ Determine which mode to use based on the user's request:
 
 1. Read the codebase structure to understand the site architecture
 2. Read `references/audit-checklist.md` for the complete audit checklist
-3. Systematically check each area, reading relevant files
-4. Produce a prioritized report with findings grouped by severity (Critical / Important / Nice-to-have)
-5. Offer to implement fixes starting from the highest impact items
+3. Read `references/aeo-measurement-template.md` when AEO/GEO performance tracking is requested
+4. Systematically check each area, reading relevant files
+5. Produce a prioritized report with findings grouped by severity (Critical / Important / Nice-to-have)
+6. Tag recommendations with confidence tiers (Standards-based / Widely observed / Experimental)
+7. Offer to implement fixes starting from the highest impact items
 
 ### 2. Content Page Optimization
 **Trigger:** User is creating or optimizing a landing page, blog post, or marketing page

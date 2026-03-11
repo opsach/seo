@@ -144,6 +144,12 @@ Use this checklist systematically when performing a full site audit. Check each 
 - [ ] Referenced in robots.txt
 - [ ] Updated when site structure changes
 
+### Recommendation Confidence & Evidence
+- [ ] Each recommendation is tagged with confidence: **Standards-based** / **Widely observed** / **Experimental**
+- [ ] Benchmark-style claims include source links or references
+- [ ] Any platform-specific claim (ChatGPT, Perplexity, Google AI Overviews, Bing Copilot) includes date/context
+- [ ] Forward-looking recommendations are clearly labeled as hypotheses, not guarantees
+
 ### Off-Site Presence
 - [ ] Product listed on relevant directories (G2, Capterra, ProductHunt, AlternativeTo)
 - [ ] Consistent brand information across all external platforms
@@ -167,6 +173,14 @@ Use this checklist systematically when performing a full site audit. Check each 
 - [ ] Sitemap includes `alternates.languages` for each locale
 - [ ] Canonical URLs are locale-specific
 - [ ] Middleware handles locale detection and redirection
+
+## 8. GEO/AEO Measurement Discipline
+
+- [ ] 20-30 target prompts tracked quarterly across ChatGPT, Perplexity, and Google AI Overviews
+- [ ] Share of Model (SoM) tracked against top 3-5 competitors
+- [ ] Citation log records source URL, query, model, and date
+- [ ] AI referral traffic segmented in analytics (`chat.openai.com`, `perplexity.ai`, etc.)
+- [ ] Optimization backlog linked to measurement deltas (what changed, what improved)
 
 ## Scoring Guide
 
