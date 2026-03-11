@@ -46,6 +46,35 @@ claude /install-plugin https://github.com/AndreasH96/seo-geo-consultant
 - `aeo-measurement-template.md` -- Quarterly AEO measurement framework for prompt tracking, Share of Model, citation rate, and action mapping
 - `audit-report-template.md` -- Standardized SEO/GEO audit output format with severity, impact/effort prioritization, and 30/60/90 roadmap
 - `evidence-policy.md` -- Confidence-tier and evidence-quality policy to prevent overconfident GEO/AEO claims
+- `run-guide.md` -- Step-by-step guide to run audits, AEO planning, and implementation workflows in Claude Code
+
+
+## How to Run This Tool
+
+This project is a **Claude Code plugin/skill**, not a standalone CLI executable.
+
+1. Install the plugin:
+
+```bash
+claude /install-plugin https://github.com/AndreasH96/seo-geo-consultant
+```
+
+2. Open Claude Code in the website/app repo you want to improve.
+3. Trigger one of the workflows with explicit prompts, for example:
+
+```text
+Audit my site's SEO and GEO readiness and format output using references/audit-report-template.md
+```
+
+```text
+Create a quarterly AEO measurement plan using references/aeo-measurement-template.md
+```
+
+```text
+Implement Next.js technical SEO using references/nextjs-implementation.md and references/schema-templates.md
+```
+
+See the full operational guide in `skills/seo-geo-consultant/references/run-guide.md`.
 
 ## Key GEO Concepts
 
