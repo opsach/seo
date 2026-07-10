@@ -56,10 +56,36 @@ metadata, JSON-LD, sitemap, robots.txt, and canonicals.
 Use references/nextjs-implementation.md and references/schema-templates.md.
 ```
 
+For other stacks, swap the implementation reference:
+- React SPA (Vite/CRA): `references/react-spa-implementation.md`
+- WordPress / Shopify / site builders: `references/cms-implementation.md`
+
 Expected output:
-- Concrete code changes in your app
+- Concrete code changes in your app (or platform-specific instructions for CMS clients)
 - Metadata/structured data implementation
 - Crawlability files (`sitemap.xml`, `robots.txt` patterns)
+
+## 5b) Run keyword & content strategy mode
+
+Use a prompt like:
+
+```text
+Build a keyword and content plan for this product using
+references/content-strategy.md. Start from our Search Console data
+and produce topic clusters plus a content brief per page.
+```
+
+Expected output:
+- Intent-mapped, prioritized keyword targets
+- Topic-cluster map (pillar + cluster pages) with internal linking rules
+- A content brief per planned page
+
+## Shortcut: slash commands
+
+If installed as a plugin, two commands wrap the most common workflows:
+
+- `/seo-audit [URL or path]` -- full audit (codebase or URL-only)
+- `/aeo-plan [product or URL]` -- quarterly AEO measurement plan
 
 ## 6) Run a live site audit (URL only)
 

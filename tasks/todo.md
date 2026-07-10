@@ -72,7 +72,22 @@
 
 **Noted for follow-up (backlog):**
 - [ ] Test `/plugin marketplace add opsach/seo` end-to-end after merge to main (marketplace pulls from the default branch)
-- [ ] README promises react-helmet-async guidance for Vite/CRA -- no reference file covers it yet; add one or trim the claim
-- [ ] Consider a WordPress/Shopify implementation reference (many agency clients are not Next.js)
+- [x] README promises react-helmet-async guidance for Vite/CRA -- no reference file covers it yet; add one or trim the claim (done 2026-07-10: `react-spa-implementation.md`)
+- [x] Consider a WordPress/Shopify implementation reference (many agency clients are not Next.js) (done 2026-07-10: `cms-implementation.md`)
 - [ ] Decide whether `docs/doctrine/` (Prospect Intel templates) belongs in this repo at all
+
+### [2026-07-10] Round 2: close the strategic gaps (Mode: Light)
+
+**What was done:**
+- NEW `references/react-spa-implementation.md` -- Vite/CRA SEO: rendering reality check (AI crawlers don't execute JS), react-helmet-async component, prerendering ladder, SPA audit traps (soft 404s, hash routing)
+- NEW `references/cms-implementation.md` -- WordPress (plugin setup, thin archives, attachment pages, schema duplication), Shopify (robots.txt.liquid, duplicate product URLs, app bloat), site builders, cross-platform verification
+- NEW `references/content-strategy.md` -- search intent mapping, keyword research from owned data outward, topic clusters, content brief template, internal linking architecture, cannibalization consolidation
+- NEW audit-checklist section 11: Site Migrations (redirect maps, staging noindex, GSC change of address, post-launch monitoring)
+- NEW slash commands: `commands/seo-audit.md`, `commands/aeo-plan.md`
+- SKILL.md: broadened trigger description to all stacks, stack-routing in mode 3, new mode 6 (Keyword & Content Strategy), reference list updated
+- README/run-guide updated for all of the above; plugin version 1.0.0 -> 1.1.0
+
+**What was verified:**
+- All new numeric/behavioral claims hedged or confidence-tagged per evidence-policy.md
+- README counts, mode numbers, file lists, and install commands consistent with actual files
 
