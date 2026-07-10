@@ -190,6 +190,19 @@ Use this checklist systematically when performing a full site audit. Check each 
 - [ ] Implementation order ranked using impact/effort score
 - [ ] Quarterly baseline metrics captured before roadmap approval
 
+## 10. Local SEO (If Applicable -- Local Business Clients)
+
+- [ ] `LocalBusiness` schema (most specific subtype: Restaurant, Dentist, etc.) on homepage/contact page
+- [ ] NAP (Name, Address, Phone) in schema exactly matches on-page content
+- [ ] NAP consistent across Google Business Profile, Yelp, Facebook, and directories
+- [ ] Google Business Profile claimed, verified, and complete (categories, hours, photos)
+- [ ] `geo` coordinates and `openingHoursSpecification` in schema
+- [ ] Location pages exist for each physical location (multi-location businesses)
+- [ ] Primary location keyword in title tag and H1 ("[Service] in [City]")
+- [ ] Embedded map on contact/location page
+- [ ] Review acquisition process in place (reviews feed both local pack and AI recommendations)
+- [ ] `sameAs` links to Google Business Profile and active directory listings
+
 ## Scoring Guide
 
 After completing the audit, assign a GEO Readiness Score:

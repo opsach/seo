@@ -14,7 +14,8 @@ Install type safety: `npm install schema-dts`
 7. [BreadcrumbList](#breadcrumb)
 8. [Person (Author)](#person)
 9. [HowTo (Tutorial)](#howto)
-10. [Combining Multiple Schemas](#combining)
+10. [LocalBusiness (Local Clients)](#localbusiness)
+11. [Combining Multiple Schemas](#combining)
 
 ---
 
@@ -97,9 +98,12 @@ const softwareSchema: WithContext<SoftwareApplication> = {
     highPrice: '299',     // Highest tier
     offerCount: '3',      // Number of plans
   },
+  // WARNING: only include aggregateRating if you have REAL reviews that are
+  // visible on the page. Fabricated or off-page rating markup violates
+  // Google's structured data policies and can trigger a manual action.
   aggregateRating: {
     '@type': 'AggregateRating',
-    ratingValue: '4.8',
+    ratingValue: '4.8',   // must match ratings shown on the page
     ratingCount: '150',
     bestRating: '5',
     worstRating: '1',
@@ -203,6 +207,10 @@ function createArticleSchema(post: {
 ## 6. FAQPage <a name="faq"></a>
 
 Use on: FAQ pages, pricing pages with FAQ sections, any page with Q&A content.
+
+> **Expectation note:** Google removed FAQ rich results for most sites in 2023
+> (now limited to well-known government/health sites). Implement FAQPage for
+> **GEO/AI extractability and content structure**, not for Google rich snippets.
 
 ```tsx
 import type { FAQPage, WithContext } from 'schema-dts'
@@ -309,6 +317,11 @@ const authorSchema: WithContext<Person> = {
 
 Use on: Tutorial pages, step-by-step guides, getting-started docs.
 
+> **Expectation note:** Google deprecated HowTo rich results in 2023. HowTo
+> markup no longer produces visual snippets in Google Search -- keep it for
+> AI/GEO parseability and other consumers, but do not promise clients a
+> rich-result appearance from it.
+
 ```tsx
 import type { HowTo, WithContext } from 'schema-dts'
 
@@ -343,7 +356,69 @@ const howToSchema: WithContext<HowTo> = {
 
 ---
 
-## 10. Combining Multiple Schemas <a name="combining"></a>
+## 10. LocalBusiness (Local Clients) <a name="localbusiness"></a>
+
+Use on: Homepage/contact/location pages of local businesses (restaurants, agencies, clinics, shops). This is the highest-impact schema for local SEO and for "best [category] near [city]" AI queries.
+
+```tsx
+import type { Restaurant, WithContext } from 'schema-dts'
+
+// Use the most specific subtype available: Restaurant, Dentist, LegalService,
+// AutoRepair, etc. Fall back to LocalBusiness if nothing fits.
+const localBusinessSchema: WithContext<Restaurant> = {
+  '@context': 'https://schema.org',
+  '@type': 'Restaurant',
+  name: 'Business Name',
+  url: 'https://yourdomain.com',
+  image: 'https://yourdomain.com/storefront.jpg',
+  telephone: '+1-555-555-5555',      // must match the number shown on-page
+  priceRange: '$$',
+  servesCuisine: 'Italian',           // Restaurant-specific
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: '123 Main Street',
+    addressLocality: 'Austin',
+    addressRegion: 'TX',
+    postalCode: '78701',
+    addressCountry: 'US',
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: 30.2672,
+    longitude: -97.7431,
+  },
+  openingHoursSpecification: [
+    {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+      opens: '11:00',
+      closes: '22:00',
+    },
+    {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Saturday', 'Sunday'],
+      opens: '10:00',
+      closes: '23:00',
+    },
+  ],
+  sameAs: [
+    'https://www.google.com/maps/place/...',   // Google Business Profile
+    'https://www.yelp.com/biz/...',
+    'https://www.facebook.com/...',
+    'https://www.instagram.com/...',
+  ],
+  menu: 'https://yourdomain.com/menu',          // Restaurant-specific
+  acceptsReservations: 'https://yourdomain.com/reservations',
+}
+```
+
+**NAP rule:** Name, Address, Phone in this markup must exactly match the
+on-page content, the Google Business Profile, and every directory listing.
+Inconsistent NAP is the most common local SEO failure.
+
+---
+
+## 11. Combining Multiple Schemas <a name="combining"></a>
 
 Most pages should have 2-3 schemas. Use the JsonLd component for each:
 
@@ -376,6 +451,7 @@ export default async function BlogPost({ params }: Props) {
 | Page | Schema 1 | Schema 2 | Schema 3 |
 |------|----------|----------|----------|
 | Homepage | Organization | WebSite | -- |
+| Local business homepage | LocalBusiness (specific subtype) | WebSite | FAQPage (if FAQ exists) |
 | Product page | SoftwareApplication | BreadcrumbList | FAQPage (if FAQ exists) |
 | Pricing page | Product (per plan) | FAQPage | BreadcrumbList |
 | Blog post | BlogPosting | BreadcrumbList | -- |

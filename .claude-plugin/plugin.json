@@ -1,0 +1,12 @@
+{
+  "name": "seo-geo-consultant",
+  "description": "Senior SEO and GEO (Generative Engine Optimization) consultant. Audits, strategizes, and implements technical SEO, structured data, content optimization, and AI search visibility for web applications.",
+  "version": "1.0.0",
+  "author": {
+    "name": "opsach"
+  },
+  "homepage": "https://github.com/opsach/seo",
+  "repository": "https://github.com/opsach/seo",
+  "license": "MIT",
+  "keywords": ["seo", "geo", "aeo", "structured-data", "ai-search", "nextjs"]
+}

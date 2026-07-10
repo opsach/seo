@@ -102,23 +102,29 @@ AI engines cite product comparison content at 10-20x higher rates than blog/PR c
 
 ## Citation Signals & Ranking Factors <a name="citation-signals"></a>
 
+> **Evidence note (see `evidence-policy.md`):** The statistics in this section
+> come from third-party field studies and vendor research (2024-2025), not
+> platform documentation. Treat them as **Widely observed** directional signals,
+> not guarantees -- never quote them to a client as precise, verified numbers
+> without checking the current source.
+
 ### Semantic Alignment
-Content with cosine similarity scores above 0.88 to query intent achieves 7.3x higher citation rates compared to poorly aligned content (below 0.75). This means: write content that directly matches how people phrase questions, not just keyword-optimized copy.
+Content closely aligned with query intent earns dramatically higher citation rates -- one 2025 field study measured ~7x higher citations for tightly aligned content vs poorly aligned content. [Widely observed] This means: write content that directly matches how people phrase questions, not just keyword-optimized copy.
 
 ### Entity Recognition
-Pages with 15+ recognized entities show improved citation rates. Build entity presence through:
+Entity-rich pages (product names, technologies, standards, people) show improved citation rates. [Widely observed] Build entity presence through:
 - Consistent mentions of your product/brand name
 - References to known technologies, standards, and concepts
 - Links to and from authoritative entity sources (Wikipedia, Crunchbase)
 
 ### Content Authority Signals
-- 96% of AI Overview citations come from sources with strong E-E-A-T signals
+- The overwhelming majority of AI Overview citations come from sources with strong E-E-A-T signals [Widely observed]
 - Named, credentialed authors (not "content team")
 - Cross-platform brand presence (G2, Capterra, LinkedIn, Crunchbase)
 - Third-party mentions and reviews
 
 ### Structured Data Impact
-Sites with properly implemented structured data are cited 3.2x more often. Sites combining structured data with FAQ blocks see a 44% increase in AI citations.
+Sites with properly implemented structured data are consistently reported to earn more AI citations (vendor studies claim 3x+ uplift; combining structured data with FAQ-style blocks shows further gains). [Widely observed -- vendor-reported, verify against your own citation log]
 
 ---
 
@@ -173,10 +179,21 @@ Allow: /
 User-agent: PerplexityBot
 Allow: /
 
-User-agent: GoogleExtended
+User-agent: Google-Extended
 Allow: /
 
 User-agent: Googlebot
+Allow: /
+
+# User-initiated AI fetchers (fetch pages live when a user asks -- these
+# produce citations, so do not block them)
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Perplexity-User
 Allow: /
 
 # Block private/admin areas
@@ -194,7 +211,7 @@ Sitemap: https://yourdomain.com/sitemap.xml
 - Consider allowing higher crawl rates for known AI bots
 
 ### Technical Requirements for AI Crawlers
-- **TTFB under 200ms** -- AI crawlers are less patient than traditional search bots
+- **TTFB under 200ms** -- AI crawlers are less patient than traditional search bots [Experimental -- a sensible performance target, not a documented platform threshold]
 - **Server-side rendered content** -- JS-only content may be invisible to AI crawlers
 - **Clean HTML structure** -- headers, lists, tables should be semantic HTML
 - **Fast response times** -- slow pages get crawled less frequently

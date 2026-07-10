@@ -1,0 +1,13 @@
+{
+  "name": "opsach-seo",
+  "owner": {
+    "name": "opsach"
+  },
+  "plugins": [
+    {
+      "name": "seo-geo-consultant",
+      "source": "./",
+      "description": "Senior SEO/GEO consultant skill: full audits, AEO measurement, structured data, Next.js technical SEO, and AI search visibility."
+    }
+  ]
+}

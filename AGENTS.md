@@ -1,35 +1,22 @@
-# Codex Agent Instructions
+# Agent Instructions
 
-> Entry point for OpenAI Codex. Full doctrine lives in the files referenced below.
-> Read them in the order listed before starting any work.
+> Entry point for OpenAI Codex and other agents. Identical intent to `CLAUDE.md` —
+> read that file for the full operating instructions for this repository.
 
----
+**This repository is the SEO & GEO Consultant plugin for Claude Code** — a
+documentation/skill knowledge pack. No application code, build, or tests.
 
-## Startup Sequence (Every Session, No Exceptions)
+## Startup Sequence
 
 1. Read `tasks/lessons.md` — absorb all active rules
 2. Read `tasks/todo.md` — find where the last session ended
-3. Check for unresolved risk flags
-4. Identify active mode: **Standard** / **Light** / **Incident**
-5. Only then: begin work
+3. Mode: **Light** (docs-only repo)
+4. Begin work
 
----
+## Key Rules
 
-## Doctrine Files
-
-| File | When to read it |
-|---|---|
-| `AGENT_OPS.md` | Always — core execution doctrine |
-| `QA_OPS.md` | Before writing, reviewing, or running any tests |
-| `DEPLOY_OPS.md` | Before any database change or deployment |
-| `SECURITY_OPS.md` | Before any feature ships to production |
-| `AGENT_OPS_PROSPECT_INTEL.md` | Always — project-specific rules for this codebase |
-
----
-
-## Non-Negotiables
-
-- Temporary fixes are future bugs with extra steps
-- Tests passing is necessary — not sufficient
+- The product is `skills/seo-geo-consultant/` — SKILL.md orchestrates, `references/` holds the depth
+- Numeric/benchmark claims require confidence tier + source per `skills/seo-geo-consultant/references/evidence-policy.md`
+- Keep README, run-guide, and `.claude-plugin/` manifests consistent with each other
+- `docs/doctrine/` is a portable ops framework for *application* projects; the Prospect Intel overlay files in there are templates from another project — not rules for this repo
 - Never fail silently
-- Read `tasks/lessons.md` first. Every session. No exceptions.

@@ -73,6 +73,14 @@ Determine which mode to use based on the user's request:
 
 Remember: AI search is both on-site AND off-site. Only 11% of domains overlap between ChatGPT and Perplexity citations -- what others say about you matters as much as your own site.
 
+### 5. Live Site Audit (URL only, no codebase)
+**Trigger:** User gives a URL for a site whose code you don't have access to (prospect audits, client pitches, competitor benchmarking)
+
+1. Read `references/live-site-audit.md` for the fetch-and-inspect procedure
+2. Fetch and analyze: homepage HTML, robots.txt, sitemap.xml, llms.txt, redirect behavior, response headers
+3. Sample 5-10 representative pages from the sitemap and check meta tags, headings, schema, and content structure
+4. Produce the same prioritized report as a full audit, flagging what could not be verified without code access
+
 ## Core Principles
 
 ### SEO Fundamentals (Always Apply)
@@ -87,12 +95,12 @@ Remember: AI search is both on-site AND off-site. Only 11% of domains overlap be
 ### GEO Fundamentals (Always Apply for Public Content)
 - **Self-contained passages**: Write sections of 120-180 words between headers that make sense without surrounding context. AI systems extract passages of this length for citations
 - **Lead with the answer**: First 40-60 words of any section should directly answer the implicit question
-- **Fact density**: Include specific statistics, cite sources, quote experts. This alone improves AI visibility 30-40%
+- **Fact density**: Include specific statistics, cite sources, quote experts. Improves AI visibility 30-40% (Princeton GEO study, KDD 2024 — Widely observed)
 - **Named authors**: Every piece of content should have a credentialed, named author -- anonymous content is penalized by AI citation algorithms
 - **Freshness**: Content older than 3 months sees sharp drops in AI citations. Add visible "Last updated" dates and refresh quarterly
 - **AI crawler access**: Ensure robots.txt allows GPTBot, ClaudeBot, PerplexityBot, OAI-SearchBot, and Googlebot
 - **AI-extractable patterns**: Write content in patterns LLMs naturally extract and cite:
-  - *Definitional*: "Skyblobs is a free, web-based diagram builder for multi-cloud data platform architectures."
+  - *Definitional*: "[Product] is a [category] that [primary job] for [target audience]." One sentence, no marketing filler
   - *Feature bullets*: Numbered/bulleted lists that AI reproduces verbatim
   - *Comparative positioning*: "Unlike [competitor], [product] is purpose-built for [niche]"
   - *Use-case triggers*: Match exact conversational queries people type into AI assistants
@@ -137,15 +145,6 @@ For every public-facing page, verify:
 [ ] JSON-LD structured data -- appropriate schema type
 [ ] <html lang="en"> -- correct language attribute
 ```
-
-## Edge Types (Connection Descriptions for AI)
-
-When optimizing content about data architectures (like this project), use precise technical terminology that AI systems can parse:
-- **Batch**: Scheduled, periodic data movement
-- **Stream**: Real-time, continuous data flow
-- **API**: Request/response integration
-- **SQL**: Query-based data access
-- **Files**: File-based data transfer (CSV, Parquet, etc.)
 
 ## Output Format
 
@@ -192,4 +191,9 @@ Read these when you need detailed implementation guidance:
 - **`references/audit-checklist.md`** -- Complete audit checklist with all items to check. Read when performing a full audit.
 - **`references/geo-optimization.md`** -- Deep dive on GEO strategy: content structure, citation optimization, AI crawler management, E-E-A-T, SaaS-specific tactics, off-site presence, and llms.txt optimization. Read when optimizing for AI search visibility.
 - **`references/nextjs-implementation.md`** -- Production-ready Next.js code for metadata, JSON-LD, sitemaps, robots.txt, OG images, Core Web Vitals, i18n. Read when implementing technical SEO in Next.js.
-- **`references/schema-templates.md`** -- Copy-paste JSON-LD templates for all common page types. Read when adding structured data.
+- **`references/schema-templates.md`** -- Copy-paste JSON-LD templates for all common page types, including LocalBusiness for local clients. Read when adding structured data.
+- **`references/live-site-audit.md`** -- URL-only audit procedure for sites without code access. Read when auditing a live site, prospect, or competitor.
+- **`references/audit-report-template.md`** -- Standardized audit output: severity matrix, impact/effort priority, 30/60/90 roadmap. Use for every audit deliverable.
+- **`references/evidence-policy.md`** -- Confidence tiers and evidence standards for claims. Apply to every recommendation.
+- **`references/aeo-measurement-template.md`** -- Quarterly AEO measurement: prompt tracking, Share of Model, citation rate. Read when setting up GEO performance tracking.
+- **`references/run-guide.md`** -- Step-by-step operator guide for running each workflow.
