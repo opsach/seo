@@ -1,11 +1,12 @@
 ---
 name: seo-geo-consultant
 description: >
-  Senior SEO and GEO (Generative Engine Optimization) consultant for SaaS and web applications built with React/Next.js.
+  Senior SEO and GEO (Generative Engine Optimization) consultant for SaaS and web applications.
   Audits, strategizes, and implements technical SEO, content optimization, structured data, and AI search visibility.
+  Covers Next.js, React SPAs (Vite/CRA), WordPress, Shopify, and site builders, plus URL-only audits of live sites.
   Use this skill whenever the user mentions SEO, GEO, search visibility, meta tags, structured data, schema markup,
   JSON-LD, sitemaps, robots.txt, Open Graph, Core Web Vitals, AI search optimization, search rankings,
-  organic traffic, content optimization for search, or wants their site to be discoverable by Google, Bing,
+  organic traffic, keyword research, content strategy, or wants their site to be discoverable by Google, Bing,
   ChatGPT, Perplexity, or AI Overviews. Also trigger when the user is building landing pages, marketing pages,
   blog pages, or any public-facing content where discoverability matters -- even if they don't explicitly say "SEO".
 ---
@@ -56,7 +57,10 @@ Determine which mode to use based on the user's request:
 ### 3. Technical SEO Implementation
 **Trigger:** User asks about sitemaps, robots.txt, structured data, meta tags, canonical URLs, or Core Web Vitals
 
-1. Read `references/nextjs-implementation.md` for Next.js-specific code patterns
+1. Detect the stack, then read the matching implementation reference:
+   - Next.js -> `references/nextjs-implementation.md`
+   - Vite/CRA client-rendered React -> `references/react-spa-implementation.md`
+   - WordPress, Shopify, Webflow/Squarespace/Wix -> `references/cms-implementation.md`
 2. Read `references/schema-templates.md` for JSON-LD templates
 3. Implement the requested technical SEO elements with production-ready code
 4. Validate the implementation against best practices
@@ -80,6 +84,14 @@ Remember: AI search is both on-site AND off-site. Only 11% of domains overlap be
 2. Fetch and analyze: homepage HTML, robots.txt, sitemap.xml, llms.txt, redirect behavior, response headers
 3. Sample 5-10 representative pages from the sitemap and check meta tags, headings, schema, and content structure
 4. Produce the same prioritized report as a full audit, flagging what could not be verified without code access
+
+### 6. Keyword & Content Strategy
+**Trigger:** User asks about keyword research, what content to create, topic clusters, content calendars, internal linking strategy, or why traffic is flat despite clean technical SEO
+
+1. Read `references/content-strategy.md` for the intent-mapping, research, and clustering process
+2. Start from data the client owns (Search Console striking-distance queries, sales/support questions) before external tools
+3. Deliver: prioritized keyword targets, a topic-cluster map, and a content brief per page using the brief template
+4. Connect the plan to GEO: reuse the AEO prompt set as keyword targets and schedule quarterly refreshes
 
 ## Core Principles
 
@@ -191,6 +203,9 @@ Read these when you need detailed implementation guidance:
 - **`references/audit-checklist.md`** -- Complete audit checklist with all items to check. Read when performing a full audit.
 - **`references/geo-optimization.md`** -- Deep dive on GEO strategy: content structure, citation optimization, AI crawler management, E-E-A-T, SaaS-specific tactics, off-site presence, and llms.txt optimization. Read when optimizing for AI search visibility.
 - **`references/nextjs-implementation.md`** -- Production-ready Next.js code for metadata, JSON-LD, sitemaps, robots.txt, OG images, Core Web Vitals, i18n. Read when implementing technical SEO in Next.js.
+- **`references/react-spa-implementation.md`** -- SEO for client-rendered React (Vite/CRA): rendering reality check, react-helmet-async, prerendering, SPA-specific traps. Read when the project is an SPA without SSR.
+- **`references/cms-implementation.md`** -- WordPress, Shopify, and site-builder implementation: platform setup, platform-specific traps, and high-value wins. Read when the client is on a CMS.
+- **`references/content-strategy.md`** -- Keyword research, search intent mapping, topic clusters, content briefs, internal linking architecture, cannibalization fixes. Read for content planning.
 - **`references/schema-templates.md`** -- Copy-paste JSON-LD templates for all common page types, including LocalBusiness for local clients. Read when adding structured data.
 - **`references/live-site-audit.md`** -- URL-only audit procedure for sites without code access. Read when auditing a live site, prospect, or competitor.
 - **`references/audit-report-template.md`** -- Standardized audit output: severity matrix, impact/effort priority, 30/60/90 roadmap. Use for every audit deliverable.

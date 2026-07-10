@@ -203,6 +203,21 @@ Use this checklist systematically when performing a full site audit. Check each 
 - [ ] Review acquisition process in place (reviews feed both local pack and AI recommendations)
 - [ ] `sameAs` links to Google Business Profile and active directory listings
 
+## 11. Site Migrations (If Applicable -- Redesign, Replatform, Domain or URL Change)
+
+Botched migrations are the most common cause of catastrophic traffic loss. If any migration is planned or recent, check:
+
+- [ ] Full URL inventory exported before launch (crawl + GSC + analytics top pages)
+- [ ] 1:1 redirect map: every old URL 301s to its closest new equivalent (not the homepage)
+- [ ] Redirects resolve in ONE hop (no chains, no 302s for permanent moves)
+- [ ] Top pages by traffic and by backlinks explicitly verified post-launch
+- [ ] Canonicals, hreflang, and schema URLs updated to the new URLs
+- [ ] New sitemap submitted; old sitemap kept temporarily so crawlers discover the redirects
+- [ ] GSC "Change of Address" used for domain moves
+- [ ] Internal links updated to final URLs (not relying on redirects)
+- [ ] robots.txt and noindex checked on the NEW site (staging blocks left on is the classic launch killer)
+- [ ] Rankings/traffic benchmarked before launch; 404 report and crawl stats monitored weekly for 8+ weeks after
+
 ## Scoring Guide
 
 After completing the audit, assign a GEO Readiness Score:
