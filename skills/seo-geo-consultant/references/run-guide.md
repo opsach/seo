@@ -4,8 +4,11 @@ This repository is a **skill/plugin knowledge pack** (not a standalone CLI binar
 
 ## 1) Install
 
-```bash
-claude /install-plugin https://github.com/AndreasH96/seo-geo-consultant
+In Claude Code, add this repository as a plugin marketplace and install:
+
+```
+/plugin marketplace add opsach/seo
+/plugin install seo-geo-consultant@opsach-seo
 ```
 
 ## 2) Open your target project
@@ -58,7 +61,22 @@ Expected output:
 - Metadata/structured data implementation
 - Crawlability files (`sitemap.xml`, `robots.txt` patterns)
 
-## 6) Quality checklist before accepting output
+## 6) Run a live site audit (URL only)
+
+Use a prompt like:
+
+```text
+Run a live SEO/GEO audit of https://client-site.com using
+references/live-site-audit.md. I don't have code access.
+Format the output with references/audit-report-template.md.
+```
+
+Expected output:
+- Findings from fetched HTML, robots.txt, sitemap, redirects, and performance signals
+- Explicit "not verifiable without code access" list
+- Same severity/priority/confidence structure as a codebase audit
+
+## 7) Quality checklist before accepting output
 
 - Recommendations include confidence tier
 - Numeric claims include source/date/scope/limitations

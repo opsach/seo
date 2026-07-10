@@ -290,10 +290,13 @@ export default function robots(): MetadataRoute.Robots {
       // Explicitly allow AI crawlers (overrides any blanket blocks)
       { userAgent: 'GPTBot', allow: '/' },
       { userAgent: 'OAI-SearchBot', allow: '/' },
+      { userAgent: 'ChatGPT-User', allow: '/' },
       { userAgent: 'ClaudeBot', allow: '/' },
       { userAgent: 'Claude-SearchBot', allow: '/' },
+      { userAgent: 'Claude-User', allow: '/' },
       { userAgent: 'PerplexityBot', allow: '/' },
-      { userAgent: 'GoogleExtended', allow: '/' },
+      { userAgent: 'Perplexity-User', allow: '/' },
+      { userAgent: 'Google-Extended', allow: '/' },
     ],
     sitemap: 'https://yourdomain.com/sitemap.xml',
   }
