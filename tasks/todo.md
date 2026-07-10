@@ -71,7 +71,7 @@
 - Completed SKILL.md Reference Files list (was missing 4 of the reference files)
 
 **Noted for follow-up (backlog):**
-- [ ] Test `/plugin marketplace add opsach/seo` end-to-end after merge to main (marketplace pulls from the default branch)
+- [x] Test `/plugin marketplace add opsach/seo` end-to-end after merge to main (marketplace pulls from the default branch) (done 2026-07-10: verified on Claude Code 2.1.206 — see below)
 - [x] README promises react-helmet-async guidance for Vite/CRA -- no reference file covers it yet; add one or trim the claim (done 2026-07-10: `react-spa-implementation.md`)
 - [x] Consider a WordPress/Shopify implementation reference (many agency clients are not Next.js) (done 2026-07-10: `cms-implementation.md`)
 - [ ] Decide whether `docs/doctrine/` (Prospect Intel templates) belongs in this repo at all
@@ -90,4 +90,17 @@
 **What was verified:**
 - All new numeric/behavioral claims hedged or confidence-tagged per evidence-policy.md
 - README counts, mode numbers, file lists, and install commands consistent with actual files
+
+### [2026-07-10] End-to-end install test: `/plugin marketplace add opsach/seo` (Mode: Light)
+
+**What was done:**
+- Ran the full install path on Claude Code CLI 2.1.206 against the live GitHub default branch (main)
+
+**What was verified:**
+- `claude plugin marketplace add opsach/seo` — clones via HTTPS, marketplace validates, added as `opsach-seo`
+- `claude plugin install seo-geo-consultant@opsach-seo` — installs v1.1.0, status enabled
+- Installed cache contains `skills/seo-geo-consultant/SKILL.md` + all 12 references, and both slash commands (`commands/seo-audit.md`, `commands/aeo-plan.md`) with valid frontmatter
+
+**Noted for follow-up (backlog):**
+- [ ] Because `plugin.json` source is `./`, the *entire repo* ships with the plugin — installers receive `tasks/` (internal todo/lessons logs), `docs/doctrine/` (unrelated Prospect Intel templates), CLAUDE.md, and AGENTS.md. Functionally harmless (only `skills/` and `commands/` are loaded) but bloats the install and exposes internal working notes. Consider restructuring the plugin into a subdirectory or pruning what ships. Ties into the existing "does `docs/doctrine/` belong here" item.
 
