@@ -32,6 +32,11 @@ not expand, locate the installed `seo-geo-consultant` plugin's references direct
 - `evidence-policy.md` — confidence tiers for every recommendation.
 - The stack implementation reference named in the Discovery Brief — so your fixes are
   phrased in the site's actual idiom (e.g. `app/robots.ts`, not "edit robots.txt").
+- `owned-data-guide.md` — **if** the Discovery Brief's Data Inventory routes files to
+  you. Your slice: Screaming Frog response codes / canonicals / redirect chains /
+  indexability exports and GSC Coverage. Use them to verify at scale what code
+  reading can only infer (non-200 URLs, canonical mismatches, chains, orphans).
+  Missing data never blocks you — audit from code/fetches as usual.
 
 ## Scope (own it completely, touch nothing else)
 
@@ -102,6 +107,7 @@ Your final message must be exactly this structure:
 ### Finding Details
 #### TECH-01 — [title]
 - **Why it matters:** ...
+- **Evidence class:** data-backed [file, date range] | inferred
 - **Fix:** [stack-specific, implementable instruction or code sketch]
 
 ### Verified Clean
@@ -109,6 +115,9 @@ Your final message must be exactly this structure:
 
 ### Could Not Verify
 - [item + why]
+
+### Data Requests (top 1-3)
+- [exact export needed + what it would confirm or change]
 
 ### Handoff Notes
 - [one-liners for other departments, tagged: → onpage / schema / performance / geo / content]

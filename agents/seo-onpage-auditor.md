@@ -29,6 +29,11 @@ directory):
 - `evidence-policy.md` — confidence tiers for every recommendation.
 - The stack implementation reference named in the Discovery Brief — so fixes use the
   site's real metadata mechanism (Metadata API, react-helmet-async, SEO plugin, etc.).
+- `owned-data-guide.md` — **if** the Data Inventory routes files to you. Your slice:
+  Screaming Frog title/meta/H1 exports (duplicates and length violations at scale,
+  beyond your sample) and GSC Performance (title-rewrite candidates: queries ranking
+  position ≤ 10 whose CTR is clearly below what that position typically earns — flag
+  those pages by name). Missing data never blocks you.
 
 ## Scope (own it completely, touch nothing else)
 
@@ -95,6 +100,7 @@ Your final message must be exactly this structure:
 ### Finding Details
 #### PAGE-01 — [title]
 - **Why it matters:** ...
+- **Evidence class:** data-backed [file, date range] | inferred
 - **Fix:** [concrete replacement copy or stack-specific code change]
 
 ### Verified Clean
@@ -102,6 +108,9 @@ Your final message must be exactly this structure:
 
 ### Could Not Verify
 - [item + why]
+
+### Data Requests (top 1-3)
+- [exact export needed + what it would confirm or change]
 
 ### Handoff Notes
 - [one-liners tagged: → tech / schema / performance / geo / content]

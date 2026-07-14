@@ -71,6 +71,12 @@ priority-scored, not stapled together. Each agent also works standalone.
 | 4 | `seo-roadmap-director` | Boardroom -- merges all reports into `seo-audit-report.md` with a 30/60/90 plan |
 | 5 | `seo-fix-engineer` | Implementation -- ships approved roadmap items (the only agent with edit rights) |
 
+**Optional owned data:** drop Search Console, Screaming Frog, PageSpeed/CrUX,
+analytics, or backlink exports into a `seo-data/` folder in the audited project and
+the departments use them to verify findings at scale (labeled **data-backed** vs
+**inferred**). No data? The pipeline runs exactly the same and tells you which
+exports would be most valuable next cycle. See `owned-data-guide.md`.
+
 ### Reference Files
 
 - `audit-checklist.md` -- Complete 140+ item audit checklist covering technical SEO, on-page, structured data, GEO, local SEO, site migrations, and off-site presence
@@ -84,6 +90,7 @@ priority-scored, not stapled together. Each agent also works standalone.
 - `aeo-measurement-template.md` -- Quarterly AEO measurement framework for prompt tracking, Share of Model, citation rate, and action mapping
 - `audit-report-template.md` -- Standardized SEO/GEO audit output format with severity, impact/effort prioritization, and 30/60/90 roadmap
 - `evidence-policy.md` -- Confidence-tier and evidence-quality policy to prevent overconfident GEO/AEO claims
+- `owned-data-guide.md` -- Optional client-data ingestion (GSC, Screaming Frog, CrUX/PSI, analytics, backlinks) via a `seo-data/` folder, with data-backed vs inferred evidence labeling and graceful degradation when no data is provided
 - `run-guide.md` -- Step-by-step guide to run audits, AEO planning, and implementation workflows in Claude Code
 
 

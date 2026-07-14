@@ -36,6 +36,11 @@ directory):
   same way as client scores.
 - `evidence-policy.md` — confidence tiers. External observation is inherently
   partial; say what you could not see.
+- `owned-data-guide.md` — **if** the Data Inventory routes files to you. Your slice:
+  backlink/visibility tool exports (Ahrefs, Semrush) the client provided. Use them
+  for client-vs-competitor gap analysis only from real exported rows — never
+  estimate a competitor's traffic or authority without them. Missing data never
+  blocks you.
 
 ## Scope (per competitor, breadth over depth)
 
@@ -110,6 +115,9 @@ Your final message must be exactly this structure:
 
 ### Could Not Verify
 - [item + why — external-only limits]
+
+### Data Requests (top 1-3)
+- [exact export needed + what it would confirm, e.g. "Ahrefs referring-domains export for client + competitors → turns the off-site row from impression into measurement"]
 
 ### Handoff Notes
 - [one-liners tagged: → tech / onpage / schema / performance / geo / content]

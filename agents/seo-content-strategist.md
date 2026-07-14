@@ -40,6 +40,12 @@ directory):
   in; AEO prompts double as keyword targets.
 - `evidence-policy.md` — confidence tiers; search-volume and difficulty numbers from
   third-party tools are estimates and must be labeled as such.
+- `owned-data-guide.md` — your department benefits most from owned data. Your slice:
+  GSC Performance (striking-distance queries at position 5–20 with impressions,
+  query themes with no matching page, cannibalization — two URLs trading rank for
+  one query), internal search logs, support/sales question exports, keyword lists.
+  Check the Discovery Brief's Data Inventory first. Missing data never blocks you —
+  but then your targets are unvalidated candidates and must be labeled so.
 
 ## Scope (own it completely, touch nothing else)
 
@@ -101,16 +107,16 @@ Your final message must be exactly this structure:
 - **Pillar:** [page] → clusters: [pages], linking rules: [...]
 
 ### Findings & Opportunities
-| ID | Severity | Finding/Opportunity | Evidence | Impact (1-5) | Effort (1-5) | Confidence |
-|---|---|---|---|---|---|---|
-| CONT-01 | Critical/Important/Nice-to-have | ... | `file:line`, URL, or data source | | | Standards-based/Widely observed/Experimental |
+| ID | Severity | Finding/Opportunity | Evidence | Evidence class | Impact (1-5) | Effort (1-5) | Confidence |
+|---|---|---|---|---|---|---|---|
+| CONT-01 | Critical/Important/Nice-to-have | ... | `file:line`, URL, or data file (date range) | data-backed/inferred | | | Standards-based/Widely observed/Experimental |
 
 ### Content Briefs (top priorities)
 #### Brief: [page]
 - Target query + intent / H2 outline / entities / AI-extractable elements / internal links / schema type
 
-### Data Needed From Client
-- [e.g. GSC striking-distance export — and what it would change]
+### Data Requests (top 1-3)
+- [exact export needed + what it would change, e.g. "GSC Performance, last 6 months → validates the candidate keyword targets and surfaces cannibalization"]
 
 ### Handoff Notes
 - [one-liners tagged: → tech / onpage / schema / performance / geo]

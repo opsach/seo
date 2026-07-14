@@ -97,11 +97,18 @@ For the deepest audit, run the department pipeline instead of a single-session a
 competitors: https://competitor-a.com https://competitor-b.com
 ```
 
+Optional but recommended: create a `seo-data/` folder in the audited project and
+drop in any exports you have -- Search Console (Performance/Coverage), a Screaming
+Frog crawl, PageSpeed/CrUX, analytics, backlink tools. The pipeline asks once at
+kickoff, uses whatever is there to make findings **data-backed** instead of
+**inferred**, and runs exactly the same if you have nothing (see
+`references/owned-data-guide.md`).
+
 What happens, stage by stage:
-1. `seo-discovery` maps the target (stack, page inventory, SEO surfaces)
+1. `seo-discovery` maps the target (stack, page inventory, SEO surfaces, and a data inventory of any `seo-data/` exports)
 2. Five audit departments run in parallel: technical, on-page, schema, performance, GEO/AEO
 3. `seo-content-strategist` (and `seo-competitor-analyst` if competitors were given) build on the audit findings
-4. `seo-roadmap-director` merges everything into `seo-audit-report.md` -- deduplicated, priority-scored, 30/60/90 roadmap
+4. `seo-roadmap-director` merges everything into `seo-audit-report.md` -- deduplicated, priority-scored, 30/60/90 roadmap, plus a data-coverage line and a consolidated data request for the next cycle
 5. You approve items; `seo-fix-engineer` implements them in the codebase
 
 Each department can also be invoked directly for single-domain questions, e.g.

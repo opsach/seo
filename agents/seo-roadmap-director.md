@@ -35,6 +35,9 @@ directory):
   numeric claims. Anything a department under-tagged, you fix or strike.
 - `aeo-measurement-template.md` — the measurement plan section links to and follows
   this framework.
+- `owned-data-guide.md` — the evidence classes (data-backed / inferred / needs-data)
+  and your two duties: report Data Coverage, and consolidate the departments' Data
+  Requests into one deduplicated, client-facing list ranked by expected payoff.
 
 ## Synthesis Method
 
@@ -61,6 +64,12 @@ directory):
    verbatim from the highest-priority Criticals.
 7. **Assign owners** — role-level (developer / content / marketing-ops / decision
    needed), plus a realistic ETA class per item.
+8. **Report data coverage** — from the Discovery Brief's Data Inventory and each
+   finding's evidence class: which owned-data sources were provided, what share of
+   findings are data-backed vs inferred, and the consolidated Data Request list
+   (deduplicated across departments, each item with its expected payoff). Weight
+   ties in priority scoring toward data-backed findings — measured problems beat
+   suspected ones at equal impact/effort.
 
 ## Rules
 
@@ -88,6 +97,7 @@ directory):
 **Report written to:** [path]
 **Overall:** X/10 | **SEO:** X/10 | **GEO/AEO:** X/10
 **Departments reporting:** [list] | **Findings:** N raw → N after merge
+**Data coverage:** [sources provided or "none"] — N% of findings data-backed; most valuable missing export: [item]
 
 ### Top 3 Blockers
 1. ...
@@ -99,4 +109,7 @@ directory):
 
 ### Decisions Needed From You
 - [business calls no department could make, e.g. AI-crawler policy]
+
+### Data Request for Next Cycle
+- [consolidated, deduplicated exports to provide, ranked by payoff — or "coverage complete"]
 ```

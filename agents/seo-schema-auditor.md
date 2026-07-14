@@ -35,6 +35,9 @@ directory):
 - The stack implementation reference from the Discovery Brief — how JSON-LD should be
   emitted in this stack (e.g. Next.js `<script type="application/ld+json">` with
   `<` → `<` XSS escaping).
+- `owned-data-guide.md` — **if** the Data Inventory routes files to you. Your slice:
+  Screaming Frog structured-data reports (validation errors/warnings and per-template
+  coverage at scale). Missing data never blocks you.
 
 ## Scope (own it completely, touch nothing else)
 
@@ -105,6 +108,7 @@ Your final message must be exactly this structure:
 ### Finding Details
 #### SCHEMA-01 — [title]
 - **Why it matters:** ...
+- **Evidence class:** data-backed [file, date range] | inferred
 - **Fix:** [template reference + filled example or stack-specific change]
 
 ### Verified Clean
@@ -112,6 +116,9 @@ Your final message must be exactly this structure:
 
 ### Could Not Verify
 - [item + why]
+
+### Data Requests (top 1-3)
+- [exact export needed + what it would confirm or change]
 
 ### Handoff Notes
 - [one-liners tagged: → tech / onpage / performance / geo / content]

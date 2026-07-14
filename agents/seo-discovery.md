@@ -49,6 +49,13 @@ If `${CLAUDE_PLUGIN_ROOT}` does not expand, locate the installed
    data fetching for primary content, auth walls, hash routing, `noindex` in layouts.
 5. **Domain & environment facts** — production domain if discoverable (config, env
    examples, README), staging markers, base URL configuration.
+6. **Owned-data inventory** — check for a `seo-data/` directory (or a path the user
+   named) per
+   `${CLAUDE_PLUGIN_ROOT}/skills/seo-geo-consultant/references/owned-data-guide.md`:
+   identify each file by its headers (GSC, Screaming Frog, PSI/CrUX, analytics,
+   backlinks), record filename, date range, and row count. **Inventory only — do not
+   analyze the data; departments do that.** No folder is normal, not an error:
+   record "none provided" and move on.
 
 ## What to Establish (Live-URL Mode)
 
@@ -95,6 +102,11 @@ Your final message must be exactly this structure (downstream departments parse 
 | llms.txt | | |
 | Redirects | | |
 | i18n/hreflang | | |
+
+### Data Inventory
+| File | Source type | Date range | Rows | Routed to |
+|---|---|---|---|---|
+| (or: "none provided — all departments run in inferred mode") | | | | |
 
 ### Red Flags for Departments
 - [flag] → route to [department]

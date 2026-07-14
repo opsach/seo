@@ -103,9 +103,25 @@
 - Output contracts match audit-report-template.md fields (severity, impact/effort,
   priority score = impact/effort, confidence tiers)
 
+**Round 2 (same session): owned-data ingestion**
+- NEW `references/owned-data-guide.md` -- `seo-data/` folder convention, file
+  detection by headers (GSC, Screaming Frog, PSI/CrUX, analytics, backlinks),
+  per-department data slices, evidence classes (data-backed / inferred /
+  needs-data), graceful-degradation rules (never block on missing data, ask once
+  at intake only)
+- Discovery inventories data files (Data Inventory table in the brief); all seven
+  analysis departments consume their slice and label every finding's evidence
+  class; each report now ends with a "Data Requests (top 1-3)" section
+- Roadmap director reports a Data Coverage line, consolidates data requests into
+  one client-facing list, and breaks priority ties toward data-backed findings
+- Pipeline Stage 1 asks the user once for exports (optional, non-blocking)
+- SKILL.md reference list, README, and run-guide updated for the new reference
+
 **Noted for follow-up (backlog):**
 - [ ] Dry-run `/seo-pipeline` against a real site after merge to confirm
   `${CLAUDE_PLUGIN_ROOT}` expansion inside agent files across Claude Code versions
+- [ ] Dry-run once with a real GSC + Screaming Frog export in `seo-data/` to
+  validate the header-detection table in owned-data-guide.md against real files
 
 ### [2026-07-10] Round 2: close the strategic gaps (Mode: Light)
 

@@ -16,9 +16,17 @@ URLs if present.)
 ## Pipeline
 
 ### Stage 1 — Intake (sequential, blocking)
-Run **seo-discovery** with the target and business goal. Its Discovery Brief is the
-input to every later stage. If discovery reports the target is ambiguous, resolve
-with the user before continuing.
+First, the **one-time data call**: check whether a `seo-data/` directory exists in
+the target (or the user pointed to data files). If nothing is found, ask the user
+**once**: do they have exports to drop in — Search Console (Performance/Coverage),
+Screaming Frog crawl, PageSpeed/CrUX, analytics, backlink tools? Make clear it's
+optional and the audit runs fine without. Whatever the answer, proceed — never wait
+on data again for the rest of the pipeline, and never let any department re-ask.
+
+Then run **seo-discovery** with the target, business goal, and data location (or
+"none provided"). Its Discovery Brief — including the Data Inventory — is the input
+to every later stage. If discovery reports the target is ambiguous, resolve with the
+user before continuing.
 
 ### Stage 2 — Audit departments (parallel)
 Launch these in parallel, each with the full Discovery Brief pasted into its prompt:
@@ -48,7 +56,8 @@ returns the executive summary.
 
 ### Stage 5 — Deliver and offer execution
 Relay the director's executive summary to the user, including the "Decisions Needed"
-list, and point to the written report. Then offer to implement, starting with the
+list, the data-coverage line, and the consolidated Data Request for next cycle, and
+point to the written report. Then offer to implement, starting with the
 0–30-day items, via **seo-fix-engineer** — but only start it after the user approves
 which items to ship.
 

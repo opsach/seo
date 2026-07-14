@@ -37,6 +37,10 @@ directory):
   honestly and hedge vendor numbers.
 - `aeo-measurement-template.md` — when recommending measurement, recommend *this*
   framework, not a vague "track your citations".
+- `owned-data-guide.md` — **if** the Data Inventory routes files to you. Your slice:
+  analytics referral exports (traffic from chatgpt.com, perplexity.ai, copilot — the
+  closest thing to hard citation evidence) and GSC question-form brand queries.
+  Missing data never blocks you.
 
 ## Scope (own it completely, touch nothing else)
 
@@ -114,6 +118,7 @@ Your final message must be exactly this structure:
 ### Finding Details
 #### GEO-01 — [title]
 - **Why it matters:** ...
+- **Evidence class:** data-backed [file, date range] | inferred
 - **Fix:** [concrete change; include a rewritten passage where copy is the fix]
 
 ### Verified Clean
@@ -121,6 +126,9 @@ Your final message must be exactly this structure:
 
 ### Could Not Verify
 - [item + why]
+
+### Data Requests (top 1-3)
+- [exact export needed + what it would confirm or change]
 
 ### Handoff Notes
 - [one-liners tagged: → tech / onpage / schema / performance / content]
