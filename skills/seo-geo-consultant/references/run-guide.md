@@ -82,10 +82,30 @@ Expected output:
 
 ## Shortcut: slash commands
 
-If installed as a plugin, two commands wrap the most common workflows:
+If installed as a plugin, three commands wrap the most common workflows:
 
-- `/seo-audit [URL or path]` -- full audit (codebase or URL-only)
+- `/seo-pipeline [URL or path] [goal] [competitors]` -- full multi-agent department pipeline
+- `/seo-audit [URL or path]` -- full single-session audit (codebase or URL-only)
 - `/aeo-plan [product or URL]` -- quarterly AEO measurement plan
+
+## 5c) Run the multi-agent department pipeline
+
+For the deepest audit, run the department pipeline instead of a single-session audit:
+
+```text
+/seo-pipeline https://client-site.com -- goal: get cited by ChatGPT for [category];
+competitors: https://competitor-a.com https://competitor-b.com
+```
+
+What happens, stage by stage:
+1. `seo-discovery` maps the target (stack, page inventory, SEO surfaces)
+2. Five audit departments run in parallel: technical, on-page, schema, performance, GEO/AEO
+3. `seo-content-strategist` (and `seo-competitor-analyst` if competitors were given) build on the audit findings
+4. `seo-roadmap-director` merges everything into `seo-audit-report.md` -- deduplicated, priority-scored, 30/60/90 roadmap
+5. You approve items; `seo-fix-engineer` implements them in the codebase
+
+Each department can also be invoked directly for single-domain questions, e.g.
+"Use the seo-geo-auditor agent to check our AI search readiness."
 
 ## 6) Run a live site audit (URL only)
 

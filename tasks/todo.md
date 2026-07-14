@@ -76,6 +76,37 @@
 - [x] Consider a WordPress/Shopify implementation reference (many agency clients are not Next.js) (done 2026-07-10: `cms-implementation.md`)
 - [ ] Decide whether `docs/doctrine/` (Prospect Intel templates) belongs in this repo at all
 
+### [2026-07-14] Multi-agent SEO department pipeline (Mode: Light)
+
+**What was done:**
+- NEW `agents/` directory with 10 department subagents sharing one findings contract
+  (ID prefix, severity, evidence citation, impact/effort 1-5, confidence tier):
+  `seo-discovery` (intake brief), `seo-tech-auditor`, `seo-onpage-auditor`,
+  `seo-schema-auditor`, `seo-performance-auditor`, `seo-geo-auditor`,
+  `seo-content-strategist`, `seo-competitor-analyst`, `seo-roadmap-director`
+  (writes `seo-audit-report.md` per audit-report-template), `seo-fix-engineer`
+  (only agent with edit rights)
+- NEW `commands/seo-pipeline.md` -- 5-stage orchestration: discovery -> parallel
+  audits -> strategy -> boardroom merge -> approved implementation
+- All auditor agents are read-only, scoped to their audit-checklist sections, and
+  bound to evidence-policy.md confidence tiers; department scopes are mutually
+  exclusive with handoff notes for cross-department observations
+- README: pipeline bullet, agent table, `/seo-pipeline` in commands list
+- run-guide: new section 5c (pipeline walkthrough), slash-command list updated
+- plugin.json version 1.1.0 -> 1.2.0 (agents/ auto-discovered; no manifest key needed)
+
+**What was verified:**
+- Agent scopes map 1:1 onto audit-checklist.md sections with no orphan sections
+  (1/7/11 tech, 2/4 on-page, 3/10-schema schema, 1-perf performance, 5/8 GEO,
+  9 owned by roadmap-director's quality gates)
+- README counts, command lists, and run-guide stay consistent with actual files
+- Output contracts match audit-report-template.md fields (severity, impact/effort,
+  priority score = impact/effort, confidence tiers)
+
+**Noted for follow-up (backlog):**
+- [ ] Dry-run `/seo-pipeline` against a real site after merge to confirm
+  `${CLAUDE_PLUGIN_ROOT}` expansion inside agent files across Claude Code versions
+
 ### [2026-07-10] Round 2: close the strategic gaps (Mode: Light)
 
 **What was done:**
