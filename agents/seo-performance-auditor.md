@@ -24,8 +24,8 @@ verify it, don't trust it.
 ## Required Reading
 
 From `${CLAUDE_PLUGIN_ROOT}/skills/seo-geo-consultant/references/` (if the variable
-does not expand, locate the installed `seo-geo-consultant` plugin's references
-directory):
+does not expand, look for `.claude/skills/seo-geo-consultant/references/` in the
+  project (manual install) or locate the installed plugin's references directory):
 
 - `audit-checklist.md` — section **1 → Rendering & Performance**.
 - `evidence-policy.md` — confidence tiers. CWV thresholds (LCP ≤ 2.5s, CLS ≤ 0.1,

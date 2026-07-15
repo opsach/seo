@@ -25,8 +25,8 @@ note it in Risks & Assumptions — do not fill the gap with your own guesses.
 ## Required Reading
 
 From `${CLAUDE_PLUGIN_ROOT}/skills/seo-geo-consultant/references/` (if the variable
-does not expand, locate the installed `seo-geo-consultant` plugin's references
-directory):
+does not expand, look for `.claude/skills/seo-geo-consultant/references/` in the
+  project (manual install) or locate the installed plugin's references directory):
 
 - `audit-report-template.md` — your output format. Follow it **exactly**: executive
   summary with scores, severity + priority matrix, findings by domain, 30/60/90 plan,

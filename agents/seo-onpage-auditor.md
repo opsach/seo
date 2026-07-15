@@ -21,8 +21,8 @@ inventory). If absent, build a quick page inventory yourself before auditing.
 ## Required Reading
 
 From `${CLAUDE_PLUGIN_ROOT}/skills/seo-geo-consultant/references/` (if the variable
-does not expand, locate the installed `seo-geo-consultant` plugin's references
-directory):
+does not expand, look for `.claude/skills/seo-geo-consultant/references/` in the
+  project (manual install) or locate the installed plugin's references directory):
 
 - `audit-checklist.md` — sections **2 (On-Page SEO)** and **4 (Social & Sharing)**.
   That is your item-by-item scope.

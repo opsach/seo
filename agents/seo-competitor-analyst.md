@@ -27,8 +27,8 @@ used on the client, or the comparison is meaningless.
 ## Required Reading
 
 From `${CLAUDE_PLUGIN_ROOT}/skills/seo-geo-consultant/references/` (if the variable
-does not expand, locate the installed `seo-geo-consultant` plugin's references
-directory):
+does not expand, look for `.claude/skills/seo-geo-consultant/references/` in the
+  project (manual install) or locate the installed plugin's references directory):
 
 - `live-site-audit.md` — the URL-only fetch-and-inspect procedure. Follow its fetch
   etiquette; competitor sites get the same respectful treatment as client sites.

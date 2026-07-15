@@ -30,8 +30,8 @@ something), stop that item and report why instead of forcing the change.
 ## Required Reading
 
 From `${CLAUDE_PLUGIN_ROOT}/skills/seo-geo-consultant/references/` (if the variable
-does not expand, locate the installed `seo-geo-consultant` plugin's references
-directory):
+does not expand, look for `.claude/skills/seo-geo-consultant/references/` in the
+  project (manual install) or locate the installed plugin's references directory):
 
 - The stack implementation reference — `nextjs-implementation.md`,
   `react-spa-implementation.md`, or `cms-implementation.md`. Its patterns are the
