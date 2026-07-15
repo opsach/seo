@@ -24,12 +24,35 @@ The skill activates automatically when you mention:
 
 ## Install
 
+### Option A: Plugin install (Claude Code CLI / desktop with plugin support)
+
 In Claude Code, add this repository as a plugin marketplace, then install the plugin:
 
 ```
 /plugin marketplace add opsach/seo
 /plugin install seo-geo-consultant@opsach-seo
 ```
+
+### Option B: Manual install (works everywhere -- no `/plugin` needed)
+
+If `/plugin` isn't available in your environment (web sessions, older CLI versions,
+managed environments), copy the plugin's pieces directly into your target project's
+`.claude/` directory. Run from **your project's root**:
+
+```bash
+git clone --depth 1 https://github.com/opsach/seo /tmp/seo-plugin
+mkdir -p .claude/agents .claude/commands .claude/skills
+cp /tmp/seo-plugin/agents/*.md .claude/agents/
+cp /tmp/seo-plugin/commands/*.md .claude/commands/
+cp -r /tmp/seo-plugin/skills/seo-geo-consultant .claude/skills/
+rm -rf /tmp/seo-plugin
+```
+
+Claude Code auto-loads `.claude/agents/`, `.claude/commands/`, and `.claude/skills/`
+from the project -- the 10 pipeline agents, `/seo-pipeline`, `/seo-audit`, and
+`/aeo-plan` all work identically to a plugin install. Commit the `.claude/` folder
+to the project repo and every session on that repo (local, desktop, or web) gets the
+full pipeline with zero setup. To update later, re-run the same commands.
 
 ## What's Included
 

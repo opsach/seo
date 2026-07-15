@@ -4,12 +4,29 @@ This repository is a **skill/plugin knowledge pack** (not a standalone CLI binar
 
 ## 1) Install
 
-In Claude Code, add this repository as a plugin marketplace and install:
+**Plugin route** (Claude Code CLI/desktop with plugin support) -- add this repository
+as a plugin marketplace and install:
 
 ```
 /plugin marketplace add opsach/seo
 /plugin install seo-geo-consultant@opsach-seo
 ```
+
+**Manual route** (any environment, no `/plugin` needed) -- from your target
+project's root, copy the plugin pieces into `.claude/`:
+
+```bash
+git clone --depth 1 https://github.com/opsach/seo /tmp/seo-plugin
+mkdir -p .claude/agents .claude/commands .claude/skills
+cp /tmp/seo-plugin/agents/*.md .claude/agents/
+cp /tmp/seo-plugin/commands/*.md .claude/commands/
+cp -r /tmp/seo-plugin/skills/seo-geo-consultant .claude/skills/
+rm -rf /tmp/seo-plugin
+```
+
+Agents, slash commands, and the skill load automatically from the project's
+`.claude/` directory; commit it to the repo to make the pipeline available in every
+session (including web) with zero setup.
 
 ## 2) Open your target project
 

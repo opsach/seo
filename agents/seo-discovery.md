@@ -28,8 +28,9 @@ You may also receive a business goal (e.g. "rank for X", "get cited by ChatGPT")
   `${CLAUDE_PLUGIN_ROOT}/skills/seo-geo-consultant/references/live-site-audit.md`
   (identify yourself, don't hammer the server, note anything that fails to fetch).
 
-If `${CLAUDE_PLUGIN_ROOT}` does not expand, locate the installed
-`seo-geo-consultant` plugin directory and use its `skills/seo-geo-consultant/references/` path.
+If `${CLAUDE_PLUGIN_ROOT}` does not expand, look for
+`.claude/skills/seo-geo-consultant/references/` in the project (manual install) or
+locate the installed plugin directory and use its `skills/seo-geo-consultant/references/` path.
 
 ## What to Establish (Codebase Mode)
 

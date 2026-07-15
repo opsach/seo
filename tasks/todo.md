@@ -146,6 +146,13 @@
 - Pipeline Stage 1 asks the user once for exports (optional, non-blocking)
 - SKILL.md reference list, README, and run-guide updated for the new reference
 
+**Round 3 (same session): manual install path**
+- User's environment has no `/plugin` command -> added Option B manual install to
+  README + run-guide: copy `agents/`, `commands/`, `skills/seo-geo-consultant/`
+  into the target project's `.claude/` directory (auto-loaded, works on web too)
+- All 10 agents' reference-path fallback now names
+  `.claude/skills/seo-geo-consultant/references/` explicitly for manual installs
+
 **Noted for follow-up (backlog):**
 - [ ] Dry-run `/seo-pipeline` against a real site after merge to confirm
   `${CLAUDE_PLUGIN_ROOT}` expansion inside agent files across Claude Code versions
