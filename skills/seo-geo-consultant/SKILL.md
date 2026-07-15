@@ -210,5 +210,6 @@ Read these when you need detailed implementation guidance:
 - **`references/live-site-audit.md`** -- URL-only audit procedure for sites without code access. Read when auditing a live site, prospect, or competitor.
 - **`references/audit-report-template.md`** -- Standardized audit output: severity matrix, impact/effort priority, 30/60/90 roadmap. Use for every audit deliverable.
 - **`references/evidence-policy.md`** -- Confidence tiers and evidence standards for claims. Apply to every recommendation.
+- **`references/owned-data-guide.md`** -- How to ingest client-owned data (GSC, Screaming Frog, CrUX/PSI, analytics, backlink exports) from a `seo-data/` folder: file detection, per-domain data slices, data-backed vs inferred evidence classes, graceful degradation when data is missing. Read when the client provides exports.
 - **`references/aeo-measurement-template.md`** -- Quarterly AEO measurement: prompt tracking, Share of Model, citation rate. Read when setting up GEO performance tracking.
 - **`references/run-guide.md`** -- Step-by-step operator guide for running each workflow.

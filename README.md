@@ -11,6 +11,7 @@ This plugin gives Claude deep expertise in:
 - **Generative Engine Optimization (GEO)** -- Making your content visible in ChatGPT, Perplexity, Google AI Overviews, and Bing Copilot
 - **Multi-Stack Implementation** -- Production-ready guidance for Next.js (App Router Metadata API), React SPAs (Vite/CRA with react-helmet-async and prerendering), WordPress, Shopify, and site builders
 - **Client Deliverables** -- Standardized audit reports with severity/priority matrices, 30/60/90 roadmaps, confidence-tiered claims, and quarterly AEO measurement
+- **Multi-Agent Audit Pipeline** -- 10 specialist subagents that run like corporate departments (discovery, technical, on-page, schema, performance, GEO, content strategy, competitive intel, roadmap, implementation) and merge into one prioritized roadmap
 
 ## When It Triggers
 
@@ -45,8 +46,36 @@ In Claude Code, add this repository as a plugin marketplace, then install the pl
 
 ### Slash Commands
 
-- `/seo-audit [URL or path]` -- run a full audit of the current project, or a URL-only live audit
+- `/seo-pipeline [URL or path] [goal] [competitor URLs]` -- run the full multi-agent department pipeline end to end
+- `/seo-audit [URL or path]` -- run a full single-session audit of the current project, or a URL-only live audit
 - `/aeo-plan [product or URL]` -- generate a quarterly AEO measurement plan
+
+### Agent Pipeline (10 department subagents)
+
+`/seo-pipeline` orchestrates specialist subagents like departments in a consultancy --
+discovery first, audits in parallel, strategy on top of the audit findings, then one
+boardroom merge. Every department reports findings in a shared contract (ID, severity,
+evidence, impact/effort, confidence tier) so the final roadmap is deduplicated and
+priority-scored, not stapled together. Each agent also works standalone.
+
+| Stage | Agent | Department |
+|---|---|---|
+| 1 | `seo-discovery` | Intake -- stack detection, page inventory, SEO surface map |
+| 2 | `seo-tech-auditor` | Technical SEO -- crawlability, indexation, sitemaps, canonicals, redirects |
+| 2 | `seo-onpage-auditor` | On-Page -- titles, metas, headings, internal linking, Open Graph |
+| 2 | `seo-schema-auditor` | Structured Data -- JSON-LD coverage, validity, penalty risk |
+| 2 | `seo-performance-auditor` | Performance -- Core Web Vitals risk, rendering strategy, JS/image weight |
+| 2 | `seo-geo-auditor` | GEO/AEO -- AI crawler access, llms.txt, extractability, off-site presence |
+| 3 | `seo-content-strategist` | Content Strategy -- intent map, topic clusters, content briefs |
+| 3 | `seo-competitor-analyst` | Competitive Intel -- URL-only competitor benchmarking (optional) |
+| 4 | `seo-roadmap-director` | Boardroom -- merges all reports into `seo-audit-report.md` with a 30/60/90 plan |
+| 5 | `seo-fix-engineer` | Implementation -- ships approved roadmap items (the only agent with edit rights) |
+
+**Optional owned data:** drop Search Console, Screaming Frog, PageSpeed/CrUX,
+analytics, or backlink exports into a `seo-data/` folder in the audited project and
+the departments use them to verify findings at scale (labeled **data-backed** vs
+**inferred**). No data? The pipeline runs exactly the same and tells you which
+exports would be most valuable next cycle. See `owned-data-guide.md`.
 
 ### Reference Files
 
@@ -61,6 +90,7 @@ In Claude Code, add this repository as a plugin marketplace, then install the pl
 - `aeo-measurement-template.md` -- Quarterly AEO measurement framework for prompt tracking, Share of Model, citation rate, and action mapping
 - `audit-report-template.md` -- Standardized SEO/GEO audit output format with severity, impact/effort prioritization, and 30/60/90 roadmap
 - `evidence-policy.md` -- Confidence-tier and evidence-quality policy to prevent overconfident GEO/AEO claims
+- `owned-data-guide.md` -- Optional client-data ingestion (GSC, Screaming Frog, CrUX/PSI, analytics, backlinks) via a `seo-data/` folder, with data-backed vs inferred evidence labeling and graceful degradation when no data is provided
 - `run-guide.md` -- Step-by-step guide to run audits, AEO planning, and implementation workflows in Claude Code
 
 
