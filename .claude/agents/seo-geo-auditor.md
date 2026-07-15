@@ -26,8 +26,8 @@ queries matter.
 ## Required Reading
 
 From `${CLAUDE_PLUGIN_ROOT}/skills/seo-geo-consultant/references/` (if the variable
-does not expand, locate the installed `seo-geo-consultant` plugin's references
-directory):
+does not expand, look for `.claude/skills/seo-geo-consultant/references/` in the
+  project (manual install) or locate the installed plugin's references directory):
 
 - `geo-optimization.md` — the complete GEO playbook. This is your primary doctrine.
 - `audit-checklist.md` — sections **5 (GEO)** and **8 (GEO/AEO Measurement

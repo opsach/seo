@@ -24,7 +24,8 @@ yourself (stack + page inventory) before auditing — never audit blind.
 
 Before auditing, read from
 `${CLAUDE_PLUGIN_ROOT}/skills/seo-geo-consultant/references/` (if the variable does
-not expand, locate the installed `seo-geo-consultant` plugin's references directory):
+not expand, look for `.claude/skills/seo-geo-consultant/references/` in the
+  project (manual install) or locate the installed plugin's references directory):
 
 - `audit-checklist.md` — sections **1 (Technical Foundation)**, **7 (International
   SEO)** if applicable, and **11 (Site Migrations)** if a migration is in play. This
