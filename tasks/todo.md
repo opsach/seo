@@ -56,6 +56,35 @@
 ## Completed Tasks
 > Append completed tasks below with date. Do not delete.
 
+### [2026-07-15] Plugin packaging validation + marketplace description (Mode: Light)
+
+**What was done:**
+- Ran `claude plugin validate` (Claude Code CLI 2.1.210) on the repo: passed, with
+  one warning — the marketplace manifest had no description
+- Added `metadata.description` to `.claude-plugin/marketplace.json`; validation
+  now passes with zero warnings
+- End-to-end install test inside the session container:
+  `claude plugin marketplace add <local clone>` then
+  `claude plugin install seo-geo-consultant@opsach-seo` — both succeeded
+- `claude plugin details seo-geo-consultant` confirms the full component
+  inventory is discovered: the skill, all 3 slash commands, and all 10 agents
+  (~2.0k always-on tokens)
+- Test install and marketplace removed from the container after verification
+
+**What was verified:**
+- JSON manifests parse; YAML frontmatter of SKILL.md, all 10 agents, and all
+  3 commands parses with expected keys (name/description/tools, argument-hint)
+- README/run-guide install commands match the marketplace name (`opsach-seo`)
+  and plugin name (`seo-geo-consultant`); README's 13 reference-file bullets
+  match the 13 actual files in `references/`
+
+**Noted for follow-up (backlog):**
+- The container test used a local-path marketplace source; one confirmation of
+  the GitHub-sourced flow (`/plugin marketplace add opsach/seo`) on a real
+  machine would fully close the loop
+- `${CLAUDE_PLUGIN_ROOT}` expansion and agent-name resolution inside
+  `/seo-pipeline` still pending a live pipeline dry-run (existing backlog item)
+
 ### [2026-07-10] Product audit + packaging/content fixes (Mode: Light)
 
 **What was done:**
@@ -71,7 +100,7 @@
 - Completed SKILL.md Reference Files list (was missing 4 of the reference files)
 
 **Noted for follow-up (backlog):**
-- [ ] Test `/plugin marketplace add opsach/seo` end-to-end after merge to main (marketplace pulls from the default branch)
+- [x] Test `/plugin marketplace add opsach/seo` end-to-end after merge to main (marketplace pulls from the default branch) (done 2026-07-15 via CLI against a local clone of main; a GitHub-sourced install on a real machine is still worth one confirmation)
 - [x] README promises react-helmet-async guidance for Vite/CRA -- no reference file covers it yet; add one or trim the claim (done 2026-07-10: `react-spa-implementation.md`)
 - [x] Consider a WordPress/Shopify implementation reference (many agency clients are not Next.js) (done 2026-07-10: `cms-implementation.md`)
 - [ ] Decide whether `docs/doctrine/` (Prospect Intel templates) belongs in this repo at all

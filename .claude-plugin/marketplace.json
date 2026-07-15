@@ -3,6 +3,9 @@
   "owner": {
     "name": "opsach"
   },
+  "metadata": {
+    "description": "SEO & GEO consulting plugins for Claude Code: full-site audits, AI search visibility (GEO/AEO), structured data, multi-stack implementation, and a 10-agent audit pipeline."
+  },
   "plugins": [
     {
       "name": "seo-geo-consultant",
