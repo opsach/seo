@@ -56,6 +56,25 @@
 ## Completed Tasks
 > Append completed tasks below with date. Do not delete.
 
+### [2026-07-15] Manual `.claude/` install fallback (Mode: Light)
+
+**What was done:**
+- `/plugin` was unavailable in the session environment, so the plugin was
+  installed manually: `agents/*.md` → `.claude/agents/`, `commands/*.md` →
+  `.claude/commands/`, `skills/seo-geo-consultant/` → `.claude/skills/`
+- The `.claude/` copies were committed per the repo owner's stop-hook policy
+  (no untracked files left behind)
+
+**What was verified:**
+- All 10 agents, 3 commands, and SKILL.md + 13 reference files copied intact
+- Agent files' built-in fallback ("if `${CLAUDE_PLUGIN_ROOT}` does not
+  expand, locate the installed skill") covers this non-plugin install path
+
+**Noted for follow-up (backlog):**
+- [ ] `.claude/` now duplicates the plugin source in-repo; decide whether to
+  keep it in sync on future edits, replace it with a documented install
+  script, or gitignore it
+
 ### [2026-07-15] Plugin packaging validation + marketplace description (Mode: Light)
 
 **What was done:**
