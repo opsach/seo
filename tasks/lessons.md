@@ -21,12 +21,39 @@
    diagnosis and a specific remedy. "It didn't work" is the bug.
 4. **Run `python3 scripts/verify.py` before every commit.** It is the only test this
    repo has.
+5. **A blocked fetch is identified by provenance, never inferred from the body.** A
+   403 carrying `x-deny-reason` or an allowlist-denial phrase is exit 3 with an empty
+   body — never page content. Exercise every fetch path over both `http://` and
+   `https://`; they fail differently.
 
 ---
 
 ## Lesson Log
 
 > Append new entries here after every correction. Never delete entries.
+
+## [2026-07-25] — Probe audited the egress proxy's denial page as if it were the client site
+
+**What happened:** Asked to audit `http://fitzers.ie`, `seo-probe.py page` returned a
+complete, confident audit — "title MISSING", "H1 count 0", "0 words", "Rendering:
+NEARLY EMPTY (critical)", "JSON-LD ISSUE" — and exited 0. Every row described the
+egress proxy's 97-byte denial notice. The site was never contacted. `preflight` was
+wrong in the other direction: it called the same 403 "BLOCKED BY THE SITE" (exit 4)
+and invited a finding that fitzers.ie refuses Googlebot and AI crawlers.
+**Root cause:** The proxy tunnels `https://`, so a refused CONNECT raises a URLError
+and was already classified `policy`. Plaintext `http://` has no tunnel to refuse, so
+the proxy answers with an ordinary 403 whose body is the denial text. `fetch()` only
+scanned 403 bodies for *bot-protection* vendors (Cloudflare, DataDome …); with no
+match it left `error`unset, so every caller treated the denial as the origin's own
+response. The exit-3 path existed and was well documented — one transport shape just
+never reached it.
+**Pattern:** A failure path verified on one transport was assumed to hold on all of
+them. `https://` was tested; `http://` — what a client actually types — was not.
+**Rule:** Classify blocked-vs-real by *provenance*, not by guessing from body text: an
+`x-deny-reason` header or a denial phrase means policy, exit 3, empty body. Any new
+fetch path must be tested with both schemes before it is trusted.
+**Risk domain:** verification
+**Mode active:** Light
 
 ## [2026-07-25] — Hand-copied `.claude/` mirror drifted from source
 
@@ -96,7 +123,7 @@ recalled facts.
 | Domain | Count | Escalated? |
 |---|---|---|
 | Scope | 0 | — |
-| Verification | 3 | Yes — Active Rules 1-4; `scripts/verify.py` enforces 1, 2 and 4 |
+| Verification | 4 | Yes — Active Rules 1-5; `scripts/verify.py` enforces 1, 2 and 4 |
 | Planning | 0 | — |
 | Communication | 0 | — |
 | Escalation | 0 | — |
