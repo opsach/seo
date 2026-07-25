@@ -27,6 +27,7 @@ set -euo pipefail
 
 REPO_URL="https://github.com/opsach/seo"
 REPO_SLUG="opsach/seo"
+RAW_URL="https://raw.githubusercontent.com/opsach/seo/main/scripts/install.sh"
 SKILL="seo-geo-consultant"
 MARKET="opsach-seo"
 TARGET="$PWD"
@@ -119,7 +120,14 @@ readiness() {
     esac
   else
     say "  note  network to a specific client site is not tested"
-    say "        before auditing, run: $0 --check <client-domain>"
+    # Piped as `curl ... | bash`, $0 is literally "bash" -- printing it hands the
+    # user a command that does nothing. Only name $0 when it is a real file.
+    if [ -f "$0" ]; then
+      say "        before auditing, run: $0 --check <client-domain>"
+    else
+      say "        before auditing, run:"
+      say "        curl -fsSL $RAW_URL | bash -s -- --check <client-domain>"
+    fi
   fi
   return 0
 }
