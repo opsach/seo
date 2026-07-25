@@ -51,16 +51,24 @@ inside itself. **Commit the `.claude/` folder** and every future session on that
 
 ### Option B: Plugin install (Claude Code CLI / desktop only)
 
-`/plugin` exists in the CLI and desktop app. It is **not** available in Claude Code on
-the web -- use Option A there.
+**Two commands, and the order matters.** Adding the marketplace first is not optional --
+installing first fails with an error that sends you the wrong way (see the table below).
 
 ```
 /plugin marketplace add opsach/seo
 /plugin install seo-geo-consultant@opsach-seo
 ```
 
-Verified end to end against `github.com/opsach/seo` on Claude Code CLI 2.1.220.
-From a terminal you can do the same without the slash commands:
+`/plugin` exists in the CLI and desktop app. It is **not** available in Claude Code on
+the web -- use Option A there.
+
+> **Where you type it matters.** `/plugin ...` goes at the `>` prompt *inside* a running
+> Claude Code session. `claude plugin ...` goes in your *terminal*, at the shell prompt.
+> Never the `claude` prefix inside the session; never the leading slash outside it.
+> Mixing the two is the single most common install failure, and it does not announce
+> itself -- inside a session, a shell command is just read as a message.
+
+The terminal equivalents:
 
 ```bash
 claude plugin marketplace add opsach/seo
@@ -68,25 +76,49 @@ claude plugin install seo-geo-consultant@opsach-seo
 claude plugin details seo-geo-consultant   # inventory + token cost
 ```
 
+Note that the marketplace is named **`opsach-seo`**, not `seo` -- it does not match the
+repo path you pass to `marketplace add`. `@opsach-seo` is the suffix `install` wants.
+
 A correct install reports **Skills (4)** and **Agents (10)**. The three slash commands
 are listed under Skills — `aeo-plan`, `seo-audit`, `seo-pipeline`, alongside the
 `seo-geo-consultant` skill itself — because current Claude Code surfaces commands and
 skills in one inventory. Always-on cost is roughly 2k tokens; the rest loads on invoke.
 
+Verified end to end against `github.com/opsach/seo` on Claude Code CLI 2.1.220.
+
 ### Install troubleshooting
+
+**If an install misbehaves, do not guess -- run the doctor:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/opsach/seo/main/scripts/doctor.sh | bash
+```
+
+It checks prerequisites, the CLI version, marketplace and plugin registration, the
+files actually on disk in all four install locations, and network reachability --
+then prints a deduplicated, ordered list of the exact commands that repair whatever
+it found. Exit 0 means the plugin is usable.
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| `Plugin "seo-geo-consultant" not found in marketplace "opsach-seo" ... try marketplace update` | You ran `install` before `marketplace add`. **The suggested `marketplace update` is wrong** -- there is nothing to update yet | `claude plugin marketplace add opsach/seo`, *then* install |
+| `Plugin "seo-geo-consultant" not found in marketplace "seo"` | Used the repo name as the marketplace name | The marketplace is `opsach-seo`: `install seo-geo-consultant@opsach-seo` |
+| Typing `claude plugin ...` does nothing / is answered as a chat message | Shell command typed at the in-session `>` prompt | Use `/plugin ...` inside a session, `claude plugin ...` in a terminal |
+| `claude: command not found` after `npm install -g` | npm's global bin is not on `PATH` | Reopen the terminal; if it persists, use Option A -- it needs no CLI at all |
+| `unknown command 'plugin'` | Claude Code 1.x -- the plugin system is 2.x | `npm install -g @anthropic-ai/claude-code@latest` |
 | **"`/plugin` isn't available in this environment"** | Expected on Claude Code web — the command exists only in the CLI and desktop app | Use Option A. This is not a broken install |
 | A web session "forgets" the plugin next time | Web containers are ephemeral; a `--user` install lives in `~/.claude` and does not survive | Install into the project and **commit `.claude/`** — that is what persists |
 | `/seo-audit` does not appear after installing | The session started before the files landed | Start a new session -- commands and agents are loaded at session start |
 | Agents report "plugin files not found" | Nothing installed in any of the searched locations | Re-run the installer; every agent resolves the reference and probe paths across plugin, project, and user installs |
 | Live audit reports "blocked by network policy" | The sandbox's egress policy does not allow the client's domain -- not an install problem | See [Running against a client website](#running-against-a-client-website) |
 
-Check any install with:
+Nothing above worked? **Option A cannot fail the way Option B can** -- it copies files
+and verifies the result, with no marketplace, no registration, and no CLI involved.
+
+Contributors can additionally check a clone with:
 
 ```bash
-python3 scripts/verify.py    # from a clone: validates manifests, frontmatter, references, mirrors
+python3 scripts/verify.py    # validates manifests, frontmatter, references, mirrors
 ```
 
 ## What's Included

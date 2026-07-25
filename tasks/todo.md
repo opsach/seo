@@ -56,6 +56,57 @@
 ## Completed Tasks
 > Append completed tasks below with date. Do not delete.
 
+### [2026-07-25] Make the plugin install without problems (Mode: Light)
+
+**Requested:** "make me this able to install into claude as a plugin without any
+problems" — after a user hit repeated, unidentifiable install errors.
+
+**Diagnosis:** the repo was not broken. `claude plugin validate .` passed, `verify.py`
+passed 69/69, and a clean-room install from GitHub worked. The defect was that the
+install path had no diagnosis of its own, and three real traps were undocumented:
+
+1. `install` before `marketplace add` returns *"not found in marketplace ... try
+   `marketplace update`"* — advice that cannot work, since nothing was ever added.
+2. The marketplace is named `opsach-seo`, not `seo`. Using the repo path
+   (`@seo`) produces the same misleading "not found / try update" error.
+3. `/plugin ...` (in-session) and `claude plugin ...` (terminal) are not
+   interchangeable, and a shell command typed at the `>` prompt fails silently — it
+   is simply read as a message.
+
+**Built:**
+- NEW `scripts/doctor.sh` — diagnoses an install in 6 sections (environment,
+  prerequisites, CLI presence/version, marketplace + plugin registration, files on
+  disk across all four install locations including the plugin cache, GitHub
+  reachability). Every finding carries its repair command; the closing plan is
+  deduplicated and ordered. Exit 0 healthy / 1 needs work.
+- `verify.py` +6 checks: doctor.sh parses, is executable, its `MARKET`/`SKILL`
+  constants match the manifests, it exits non-zero, and its installer URL is the
+  published one. Now 75 checks.
+- README install section: order-matters callout, the in-session vs terminal
+  distinction, the marketplace-name trap, doctor.sh as the first troubleshooting
+  step, and 5 new table rows keyed to the **literal error strings** users see.
+- run-guide.md: same corrections, plus the doctor.
+- plugin.json 1.3.0 → 1.4.0; `.claude/` mirror regenerated via `install.sh`.
+
+**What was verified (executed, not read):**
+- Failure modes reproduced in an isolated `CLAUDE_CONFIG_DIR`: install-before-add,
+  wrong marketplace suffix, re-add (idempotent), install without suffix (works),
+  double install (idempotent).
+- doctor.sh across four machine states — healthy (exit 0), bare machine with no CLI
+  and no install (exit 1, 2 problems), CLI present but marketplace unregistered,
+  and a deliberately nested + half-copied install (5 findings → 1 deduplicated fix).
+- Prescribed repair proven end to end: broken install → `install.sh` → doctor
+  reports healthy.
+- Published one-liner run twice from `raw.githubusercontent.com` into a fresh
+  directory: HTTP 200, correct counts, no nesting on re-run.
+- `claude plugin validate .` passes; `python3 scripts/verify.py` 75 checks, 0 failed,
+  0 warnings.
+
+**Noted for follow-up:**
+- [ ] `doctor.sh`'s own curl URL points at `main`; it is only fetchable that way once
+  this branch merges. Until then it runs from a clone.
+- [ ] doctor.sh is bash — unverified under Windows PowerShell (Git Bash works).
+
 ### [2026-07-25] Full install + run verification on Claude Code 2.1.220 (Mode: Light)
 
 **Requested:** check the installation, paths, README, and everything needed to install
