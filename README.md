@@ -24,35 +24,63 @@ The skill activates automatically when you mention:
 
 ## Install
 
-### Option A: Plugin install (Claude Code CLI / desktop with plugin support)
+### Option A: Installer script (works everywhere, including Claude Code on the web)
 
-In Claude Code, add this repository as a plugin marketplace, then install the plugin:
+Run this from the root of the project you want to audit:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/opsach/seo/main/scripts/install.sh | bash
+```
+
+It copies the skill, the 10 agents, the 3 slash commands, and the evidence probe into
+that project's `.claude/` directory, then verifies the install and tells you what
+landed. Claude Code auto-loads `.claude/` -- no `/plugin` command needed, no restart
+beyond starting a new session.
+
+```bash
+# other useful forms
+curl -fsSL .../install.sh | bash -s -- --user        # install once, available in every project
+./scripts/install.sh --target ../client-site          # from a clone, into another project
+./scripts/install.sh --uninstall                      # clean removal
+```
+
+Re-running it is safe: an existing install is replaced cleanly rather than nested
+inside itself. **Commit the `.claude/` folder** and every future session on that repo
+-- CLI, desktop, or web -- gets the full pipeline with zero setup.
+
+### Option B: Plugin install (Claude Code CLI / desktop only)
+
+`/plugin` exists in the CLI and desktop app. It is **not** available in Claude Code on
+the web -- use Option A there.
 
 ```
 /plugin marketplace add opsach/seo
 /plugin install seo-geo-consultant@opsach-seo
 ```
 
-### Option B: Manual install (works everywhere -- no `/plugin` needed)
-
-If `/plugin` isn't available in your environment (web sessions, older CLI versions,
-managed environments), copy the plugin's pieces directly into your target project's
-`.claude/` directory. Run from **your project's root**:
+Verified end to end against `github.com/opsach/seo` on Claude Code CLI 2.1.220.
+From a terminal you can do the same without the slash commands:
 
 ```bash
-git clone --depth 1 https://github.com/opsach/seo /tmp/seo-plugin
-mkdir -p .claude/agents .claude/commands .claude/skills
-cp /tmp/seo-plugin/agents/*.md .claude/agents/
-cp /tmp/seo-plugin/commands/*.md .claude/commands/
-cp -r /tmp/seo-plugin/skills/seo-geo-consultant .claude/skills/
-rm -rf /tmp/seo-plugin
+claude plugin marketplace add opsach/seo
+claude plugin install seo-geo-consultant@opsach-seo
+claude plugin details seo-geo-consultant   # confirms 1 skill, 3 commands, 10 agents
 ```
 
-Claude Code auto-loads `.claude/agents/`, `.claude/commands/`, and `.claude/skills/`
-from the project -- the 10 pipeline agents, `/seo-pipeline`, `/seo-audit`, and
-`/aeo-plan` all work identically to a plugin install. Commit the `.claude/` folder
-to the project repo and every session on that repo (local, desktop, or web) gets the
-full pipeline with zero setup. To update later, re-run the same commands.
+### Install troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `/plugin` is not a recognised command | You are on Claude Code web, or a CLI older than 2.0 | Use Option A |
+| `/seo-audit` does not appear after installing | The session started before the files landed | Start a new session -- commands and agents are loaded at session start |
+| Agents report "plugin files not found" | Nothing installed in any of the searched locations | Re-run the installer; every agent resolves the reference and probe paths across plugin, project, and user installs |
+| Live audit reports "blocked by network policy" | The sandbox's egress policy does not allow the client's domain -- not an install problem | See [Running against a client website](#running-against-a-client-website) |
+
+Check any install with:
+
+```bash
+python3 scripts/verify.py    # from a clone: validates manifests, frontmatter, references, mirrors
+```
 
 ## What's Included
 
@@ -100,6 +128,39 @@ the departments use them to verify findings at scale (labeled **data-backed** vs
 **inferred**). No data? The pipeline runs exactly the same and tells you which
 exports would be most valuable next cycle. See `owned-data-guide.md`.
 
+### Evidence Toolkit: `scripts/seo-probe.py`
+
+An SEO audit is a claim about specific bytes a server sent. `seo-probe.py` fetches
+those bytes and reports measured values, so findings cite observations instead of
+impressions. Python standard library only -- no pip install, no API keys.
+
+```bash
+seo-probe.py preflight https://client.com     # can we fetch at all? if not, exactly why
+seo-probe.py site      https://client.com -n 5 # full evidence pack in ~12 requests
+seo-probe.py page      https://client.com/pricing [--json] [--ua googlebot]
+seo-probe.py robots    https://client.com      # per-crawler ALLOWED/BLOCKED + line numbers
+seo-probe.py redirects client.com              # http/https x www/apex matrix + soft-404
+seo-probe.py sitemap   https://client.com      # URL count, lastmod honesty, path groups
+```
+
+Per page it measures status and redirect chain, TTFB, title and description lengths,
+canonical, meta robots and `X-Robots-Tag`, `html lang`, heading outline, body word
+count, the share of sections inside the 120-180 word AI-extraction band, JSON-LD
+`@type`s **and parse errors with positions**, `og:`/`twitter:` coverage, hreflang,
+image alt gaps, script weight, compression and cache headers -- plus a **rendering
+verdict**: is the content in the server's HTML, or is the body an empty SPA shell?
+That last line is usually the most valuable finding in a URL-only audit.
+
+`robots` evaluates Googlebot, Bingbot, GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot,
+Claude-SearchBot, Claude-User, PerplexityBot, Perplexity-User, Google-Extended,
+Applebot-Extended, Amazonbot, Bytespider, CCBot, and meta-externalagent, and reports
+the deciding rule's line number for each.
+
+Why this matters: `WebFetch` converts pages to markdown through a summarising model,
+which discards titles, meta tags, canonicals, JSON-LD, and status codes -- everything
+an SEO audit is about. The plugin's agents are instructed to treat it as prose-reading
+only and never cite it as evidence for a tag-level finding.
+
 ### Reference Files
 
 - `audit-checklist.md` -- Complete 140+ item audit checklist covering technical SEO, on-page, structured data, GEO, local SEO, site migrations, and off-site presence
@@ -139,6 +200,44 @@ Implement Next.js technical SEO using references/nextjs-implementation.md and re
 
 See the full operational guide in `skills/seo-geo-consultant/references/run-guide.md`.
 
+## Running against a client website
+
+A URL-only audit needs one thing the plugin cannot provide for you: permission to
+reach the client's domain from wherever Claude Code is running.
+
+**Always preflight first.**
+
+```bash
+python3 .claude/scripts/seo-probe.py preflight https://client.com
+```
+
+| Exit | Meaning | What to do |
+|---|---|---|
+| 0 | Fetching works | Run `/seo-audit https://client.com` or `/seo-pipeline https://client.com` |
+| 3 | **Blocked by network policy** | The sandbox refused the connection before it left the machine -- see below |
+| 4 | **The site blocks bots** | Report it as a finding; AI crawlers are refused the same way. Never work around bot protection |
+| 5 | Unreachable | DNS, TLS, or timeout -- confirm the domain with the client |
+
+### Exit 3: the sandbox blocked it
+
+Claude Code on the web runs in a sandbox whose **network policy** is chosen when the
+environment is created. If that policy does not allow the client's domain, every
+fetch is refused -- `curl`, `WebFetch`, and the probe alike. This is an environment
+permission, not a bug, and retrying will not help. Three ways forward:
+
+1. **Change the environment's network access** setting (or allowlist the client
+   domain) and start a new session --
+   see <https://code.claude.com/docs/en/claude-code-on-the-web>.
+2. **Run from Claude Code CLI** on a machine with normal internet access.
+3. **Switch to owned-data mode** -- ask the client for Search Console, Screaming Frog,
+   and PageSpeed exports, drop them in a `seo-data/` folder, and audit those. Often
+   *better* evidence than fetching, because it covers the whole site rather than a
+   sample. See `owned-data-guide.md`.
+
+The agents enforce this: on exit 3 they stop and report the blocked host instead of
+falling back to remembered facts about the brand. An audit that invents findings is
+worth less than no audit.
+
 ## Key GEO Concepts
 
 This plugin teaches Claude about:
@@ -172,7 +271,8 @@ This plugin teaches Claude about:
 
 ## Credits
 
-Originally based on [seo-geo-consultant by AndreasH96](https://github.com/AndreasH96/seo-geo-consultant) (MIT). This fork adds the AEO measurement framework, evidence/confidence policy, audit report template, run guide, live-site audit workflow, keyword/content strategy, React SPA and WordPress/Shopify implementation guides, site-migration and local SEO checklists, LocalBusiness schema support, slash commands, and plugin packaging.
+Originally based on [seo-geo-consultant by AndreasH96](https://github.com/AndreasH96/seo-geo-consultant) (MIT). This fork adds the AEO measurement framework, evidence/confidence policy, audit report template, run guide, live-site audit workflow, keyword/content strategy, React SPA and WordPress/Shopify implementation guides, site-migration and local SEO checklists, LocalBusiness schema support, slash commands, plugin packaging, the `seo-probe.py` evidence collector, and the
+installer/verifier scripts.
 
 ## License
 

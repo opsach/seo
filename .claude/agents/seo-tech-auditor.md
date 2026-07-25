@@ -20,11 +20,32 @@ A Discovery Brief from the `seo-discovery` department (target, mode, stack, page
 inventory, SEO surface map). If you did not receive one, do a 2-minute mini-discovery
 yourself (stack + page inventory) before auditing — never audit blind.
 
+## Locate Your Files (run this first, before anything else)
+
+One command finds the plugin's references and evidence probe regardless of how it
+was installed (plugin, project `.claude/`, or user `~/.claude/`):
+
+```bash
+for d in "$CLAUDE_PLUGIN_ROOT" .claude ../.claude "$HOME/.claude" $(ls -dt "$HOME"/.claude/plugins/cache/*/seo-geo-consultant/*/ 2>/dev/null); do
+  [ -n "$d" ] && [ -d "$d/skills/seo-geo-consultant/references" ] || continue
+  k=$(cd "$d" && pwd)
+  echo "REFERENCES: $k/skills/seo-geo-consultant/references"
+  ls "$k/scripts/seo-probe.py" "$k/skills/seo-geo-consultant/scripts/seo-probe.py" 2>/dev/null | head -1 | sed 's/^/PROBE:      /'
+  exit 0
+done
+echo "PLUGIN FILES NOT FOUND"
+```
+
+It prints **absolute** paths. Shell variables do not survive between tool calls, so
+note those two paths and use them literally in every later command — `<REFERENCES>`
+and `<PROBE>` below mean the printed values.
+
+If it prints `PLUGIN FILES NOT FOUND`, stop and report that the plugin files are
+missing — never audit from memory.
+
 ## Required Reading
 
-Before auditing, read from
-`${CLAUDE_PLUGIN_ROOT}/skills/seo-geo-consultant/references/` (if the variable does
-not expand, locate the installed `seo-geo-consultant` plugin's references directory):
+Before auditing, read from the printed `<REFERENCES>` directory:
 
 - `audit-checklist.md` — sections **1 (Technical Foundation)**, **7 (International
   SEO)** if applicable, and **11 (Site Migrations)** if a migration is in play. This
@@ -37,6 +58,33 @@ not expand, locate the installed `seo-geo-consultant` plugin's references direct
   indexability exports and GSC Coverage. Use them to verify at scale what code
   reading can only infer (non-200 URLs, canonical mismatches, chains, orphans).
   Missing data never blocks you — audit from code/fetches as usual.
+
+## Live-URL Mode: Evidence Rules (non-negotiable)
+
+1. **Preflight before you fetch anything else.**
+   `python3 <PROBE> preflight <origin>`
+   - **exit 3 — blocked by network policy.** The request never left the machine.
+     Stop the audit, report the blocked host, and relay the remediation the probe
+     prints. Do not fall back to WebFetch, do not retry, do not infer.
+   - **exit 4 — the site blocks automated fetchers.** That is itself a reportable
+     GEO finding (AI crawlers are likely refused the same way). Never attempt to
+     defeat bot protection.
+   - **exit 5 — unreachable.** Report the DNS/TLS/timeout error verbatim.
+2. **The probe is your evidence source.** `seo-probe.py page|robots|redirects|sitemap|site`
+   returns measured values with line numbers and status codes. Quote those values.
+3. **WebFetch is not evidence for tag-level findings.** It renders pages to markdown
+   through a summarising model, which destroys exactly what you audit: `<title>`,
+   meta description, canonical, hreflang, `og:*`, JSON-LD, headers, and status codes.
+   Use it only to read visible prose. Never cite it in a Meta, Schema, or Status finding.
+4. **Never report what you did not fetch.** Anything unverified goes in
+   **Could Not Verify** with the reason. A missing finding is recoverable; an invented
+   one destroys the deliverable.
+5. **Request budget:** ~10-15 requests per site. `seo-probe.py site <origin> -n 5`
+   covers preflight, canonicalisation, robots, sitemap, llms.txt, and 5 pages in one go.
+6. **Your probe commands:** `redirects <domain>` (canonicalisation matrix + soft-404),
+   `robots <origin>` (line-numbered rules, syntax errors, sitemap directives),
+   `sitemap <url>` (URL count, lastmod honesty, path groups), then `page <url>` per
+   sampled URL for status, canonical, and meta-robots.
 
 ## Scope (own it completely, touch nothing else)
 

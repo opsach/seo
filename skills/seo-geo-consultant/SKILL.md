@@ -80,10 +80,17 @@ Remember: AI search is both on-site AND off-site. Only 11% of domains overlap be
 ### 5. Live Site Audit (URL only, no codebase)
 **Trigger:** User gives a URL for a site whose code you don't have access to (prospect audits, client pitches, competitor benchmarking)
 
-1. Read `references/live-site-audit.md` for the fetch-and-inspect procedure
-2. Fetch and analyze: homepage HTML, robots.txt, sitemap.xml, llms.txt, redirect behavior, response headers
-3. Sample 5-10 representative pages from the sitemap and check meta tags, headings, schema, and content structure
-4. Produce the same prioritized report as a full audit, flagging what could not be verified without code access
+1. Read `references/live-site-audit.md` for the full procedure
+2. **Preflight first** — `seo-probe.py preflight <origin>`. If it exits 3, the
+   environment's network policy blocked the request: report that and stop. Never
+   substitute remembered facts about the brand for measured ones
+3. Collect the evidence pack — `seo-probe.py site <origin> -n 5` returns
+   canonicalisation, robots per-crawler verdicts, sitemap health, llms.txt, and a
+   measured fact table per sampled page (including whether content is server-rendered)
+4. Interpret what the probe cannot judge: copy quality, intent match, E-E-A-T,
+   schema appropriateness, off-site presence
+5. Produce the same prioritized report as a full audit, stating the sample size and
+   listing what could not be verified without code access
 
 ### 6. Keyword & Content Strategy
 **Trigger:** User asks about keyword research, what content to create, topic clusters, content calendars, internal linking strategy, or why traffic is flat despite clean technical SEO
@@ -92,6 +99,42 @@ Remember: AI search is both on-site AND off-site. Only 11% of domains overlap be
 2. Start from data the client owns (Search Console striking-distance queries, sales/support questions) before external tools
 3. Deliver: prioritized keyword targets, a topic-cluster map, and a content brief per page using the brief template
 4. Connect the plan to GEO: reuse the AEO prompt set as keyword targets and schedule quarterly refreshes
+
+## Toolkit
+
+The plugin ships an evidence collector. Locate it once per session — this works for
+every install method (plugin, project `.claude/`, user `~/.claude/`):
+
+```bash
+for d in "$CLAUDE_PLUGIN_ROOT" .claude ../.claude "$HOME/.claude" $(ls -dt "$HOME"/.claude/plugins/cache/*/seo-geo-consultant/*/ 2>/dev/null); do
+  [ -n "$d" ] && [ -d "$d/skills/seo-geo-consultant/references" ] || continue
+  k=$(cd "$d" && pwd)
+  echo "REFERENCES: $k/skills/seo-geo-consultant/references"
+  ls "$k/scripts/seo-probe.py" "$k/skills/seo-geo-consultant/scripts/seo-probe.py" 2>/dev/null | head -1 | sed 's/^/PROBE:      /'
+  exit 0
+done
+echo "PLUGIN FILES NOT FOUND"
+```
+
+The paths it prints are absolute. Shell variables do not survive between tool calls,
+so use the printed values literally afterwards.
+
+`python3 <PROBE> <command> <url>` — Python stdlib only, no install step:
+
+| Command | Returns |
+|---|---|
+| `preflight <origin>` | Whether fetching works at all, and if not, exactly why (exit 3 = network policy, 4 = site blocks bots, 5 = unreachable) |
+| `page <url>` | Measured SEO fact table: status, TTFB, title/description lengths, canonical, robots, headings, JSON-LD types + parse errors, og/twitter, alt gaps, and a server-vs-client rendering verdict |
+| `robots <origin>` | Per-crawler ALLOWED/BLOCKED table (Googlebot through GPTBot, ClaudeBot, PerplexityBot) with the deciding line number, plus syntax errors |
+| `redirects <domain>` | http/https × www/apex canonicalisation matrix, chain lengths, soft-404 probe |
+| `sitemap <url>` | URL count, `lastmod` honesty, path-group breakdown, recommended page sample |
+| `site <origin> -n N` | All of the above in one ~12-request pass |
+
+**Evidence discipline:** cite the probe's measured values. `WebFetch` renders pages to
+markdown through a summarising model, which destroys titles, meta tags, canonicals,
+JSON-LD, and status codes — use it for reading prose, never as evidence for a
+tag-level finding. Anything you could not fetch goes in "Could Not Verify", never
+into a finding.
 
 ## Core Principles
 

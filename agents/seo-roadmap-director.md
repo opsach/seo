@@ -22,11 +22,32 @@ SEO, On-Page, Structured Data, Performance, GEO/AEO, Content Strategy, Competiti
 Intelligence — whichever ran). They arrive in your prompt. If a department is missing,
 note it in Risks & Assumptions — do not fill the gap with your own guesses.
 
+## Locate Your Files (run this first, before anything else)
+
+One command finds the plugin's references and evidence probe regardless of how it
+was installed (plugin, project `.claude/`, or user `~/.claude/`):
+
+```bash
+for d in "$CLAUDE_PLUGIN_ROOT" .claude ../.claude "$HOME/.claude" $(ls -dt "$HOME"/.claude/plugins/cache/*/seo-geo-consultant/*/ 2>/dev/null); do
+  [ -n "$d" ] && [ -d "$d/skills/seo-geo-consultant/references" ] || continue
+  k=$(cd "$d" && pwd)
+  echo "REFERENCES: $k/skills/seo-geo-consultant/references"
+  ls "$k/scripts/seo-probe.py" "$k/skills/seo-geo-consultant/scripts/seo-probe.py" 2>/dev/null | head -1 | sed 's/^/PROBE:      /'
+  exit 0
+done
+echo "PLUGIN FILES NOT FOUND"
+```
+
+It prints **absolute** paths. Shell variables do not survive between tool calls, so
+note those two paths and use them literally in every later command — `<REFERENCES>`
+and `<PROBE>` below mean the printed values.
+
+If it prints `PLUGIN FILES NOT FOUND`, stop and report that the plugin files are
+missing — never audit from memory.
+
 ## Required Reading
 
-From `${CLAUDE_PLUGIN_ROOT}/skills/seo-geo-consultant/references/` (if the variable
-does not expand, look for `.claude/skills/seo-geo-consultant/references/` in the
-  project (manual install) or locate the installed plugin's references directory):
+From the printed `<REFERENCES>` directory:
 
 - `audit-report-template.md` — your output format. Follow it **exactly**: executive
   summary with scores, severity + priority matrix, findings by domain, 30/60/90 plan,
