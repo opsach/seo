@@ -56,6 +56,66 @@
 ## Completed Tasks
 > Append completed tasks below with date. Do not delete.
 
+### [2026-07-25] Seamless install + run in Claude Code CLI (Mode: Light)
+
+**Requested:** "seamless run and installation in claude cli, can you fix this" — after a
+live audit of fitzers.ie could not run.
+
+**Two real defects found by executing the user's journey, not reading it:**
+
+1. **`/seo-audit` did not exist after a plugin install.** Plugin commands are namespaced
+   (`/seo-geo-consultant:seo-audit`); the bare form returns `Unknown command`. README,
+   run-guide, `install.sh` and `doctor.sh` all told users to type the bare form. A
+   correct install's first action failed like a broken one.
+2. **`CLAUDE_CONFIG_DIR` was ignored.** `--user` wrote to `$HOME/.claude` even when the
+   config dir was relocated (files land where nothing loads them, install says success),
+   and `doctor.sh` searched only `$HOME/.claude`, so it declared a healthy plugin
+   install "no installed copy found" and prescribed a redundant second copy.
+
+**Built:**
+- `install.sh --plugin` — one command for the CLI plugin route. Checks the CLI exists
+  and is 2.x, runs `marketplace add` **then** `install` (removing the ordering trap
+  whose CLI error recommends the wrong fix), confirms the result against
+  `claude plugin list`, and resolves the versioned cache path rather than assuming one.
+- `install.sh --check HOST` — preflights a client domain at install time, so a blocked
+  host surfaces before an audit instead of halfway through one.
+- `readiness()` on both routes — proves `python3` runs and `seo-probe.py` executes,
+  rather than only reporting that files were copied. Return codes separate "cannot run
+  audits" (exit 1) from "this host is unreachable" (exit 0, install is valid).
+- Route-aware closing hints in `install.sh` and `doctor.sh`; namespacing documented in
+  README (incl. a troubleshooting row) and run-guide.
+- `verify.py` +18 checks: 78 → 96.
+- plugin.json 1.4.0 → 1.5.0; `.claude/` mirror regenerated via `install.sh`.
+
+**What was verified (executed on Claude Code CLI 2.1.220, not read):**
+- Both install routes in isolated `CLAUDE_CONFIG_DIR`s, then a real session in each:
+  skill + 3 commands + 10 agents discovered on both.
+- The command each route's docs prescribe, actually typed: bare `/seo-audit` resolves
+  after a file install; `/seo-geo-consultant:seo-audit` after a plugin install; the
+  bare form under the plugin route reproduces `Unknown command`.
+- `CLAUDE_CONFIG_DIR` both ways — files in `$HOME/.claude` with the var set are NOT
+  loaded (session answered NO); the same files in the config dir ARE (answered YES).
+- Doctor on a plugin-only install: was exit 1 with a wrong remedy, now exit 0 with the
+  namespaced command. File-only install still exit 0 with the bare command.
+- Exit-code matrix: healthy 0, blocked target 0 (install valid), broken python3 1
+  ("INSTALL INCOMPLETE"). A `set -e` bug that made `return 2` kill the script was
+  found and fixed by tracing, not assumed.
+- Idempotency (no `skills/<skill>/<skill>` nesting), uninstall (0 leftovers),
+  `--plugin` re-run, and `--plugin` with no `claude` on PATH (exit 1, named remedy).
+- Full loop end to end: install → new session → `/seo-audit https://pypi.org` →
+  preflight → probe → real measured values (200, TTFB 56ms, title 31 chars), matching
+  a direct probe run. Closes the "dry-run against a real site" backlog item for
+  `/seo-audit`.
+- `python3 scripts/verify.py` 96 checks, 0 failed, 0 warnings; `claude plugin validate .`
+  passes.
+
+**Noted for follow-up:**
+- [ ] `--plugin` installs from GitHub `main`, so it serves these fixes only after this
+  branch merges. Until then use the file route from a clone.
+- [ ] `/seo-pipeline` (multi-agent) still has no live dry-run; only `/seo-audit` does.
+- [ ] The audit run prompted for Bash approval before the probe could execute. Harmless
+  interactively, but worth a note in the run-guide for headless/CI use.
+
 ### [2026-07-25] Make the plugin install without problems (Mode: Light)
 
 **Requested:** "make me this able to install into claude as a plugin without any

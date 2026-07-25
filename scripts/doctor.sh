@@ -29,6 +29,7 @@ REINSTALL="curl -fsSL $RAW | bash -s -- --user   (replaces a broken or partial i
 # backwards told users with a working install to add a second copy of it.
 STANDALONE_FOUND=0   # a file-route copy exists, complete or not
 STANDALONE_OK=0      # ...and it passed every file check
+PLUGIN_INSTALLED=0   # the marketplace route is in use -- commands are namespaced
 
 problems=0
 blockers=0
@@ -121,7 +122,11 @@ echo "4. Installed files"
 FOUND=""       # directory holding a usable copy
 FOUND_KIND=""  # how it got there: "plugin" (marketplace) or "standalone" (install.sh)
 FILES_OK=1
-for d in "${CLAUDE_PLUGIN_ROOT:-}" "$PWD/.claude" "$HOME/.claude"; do
+# CLAUDE_CONFIG_DIR relocates everything Claude Code reads at user level, including
+# the plugin cache. Searching only ~/.claude reports "nothing installed" for a working
+# install and prescribes a second copy on top of it.
+CFG="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+for d in "${CLAUDE_PLUGIN_ROOT:-}" "$PWD/.claude" "$CFG" "$HOME/.claude"; do
   if [ -n "$d" ] && [ -f "$d/skills/$SKILL/SKILL.md" ]; then
     FOUND="$d"
     if [ "$d" = "${CLAUDE_PLUGIN_ROOT:-}" ]; then
@@ -132,9 +137,12 @@ for d in "${CLAUDE_PLUGIN_ROOT:-}" "$PWD/.claude" "$HOME/.claude"; do
     break
   fi
 done
-if [ -z "$FOUND" ] && [ -d "$HOME/.claude/plugins/cache" ]; then
-  CACHED="$(find "$HOME/.claude/plugins/cache" -type f -name SKILL.md -path "*$SKILL*" 2>/dev/null | head -1)"
-  [ -n "$CACHED" ] && { FOUND="$(cd "$(dirname "$CACHED")/../.." && pwd)"; FOUND_KIND="plugin"; }
+if [ -z "$FOUND" ]; then
+  for cache in "$CFG/plugins/cache" "$HOME/.claude/plugins/cache"; do
+    [ -d "$cache" ] || continue
+    CACHED="$(find "$cache" -type f -name SKILL.md -path "*$SKILL*" 2>/dev/null | head -1)"
+    [ -n "$CACHED" ] && { FOUND="$(cd "$(dirname "$CACHED")/../.." && pwd)"; FOUND_KIND="plugin"; break; }
+  done
 fi
 
 if [ -n "$FOUND" ]; then
@@ -173,7 +181,7 @@ if [ -n "$FOUND" ]; then
   # A complete standalone tree is a finished install, not a half-done plugin one.
   [ "$FOUND_KIND" = "standalone" ] && [ "$FILES_OK" = 1 ] && STANDALONE_OK=1
 else
-  blocker "no installed copy found in CLAUDE_PLUGIN_ROOT, ./.claude, ~/.claude, or the plugin cache"
+  blocker "no installed copy found in CLAUDE_PLUGIN_ROOT, ./.claude, $CFG, ~/.claude, or the plugin cache"
   remedy "curl -fsSL $RAW | bash -s -- --user   (installs without the plugin system)"
 fi
 
@@ -183,7 +191,7 @@ echo "5. Marketplace and plugin registration"
 
 # Removing the file copy is scope-specific: ~/.claude came from --user, anything
 # else came from --target <project>.
-if [ "${FOUND:-}" = "$HOME/.claude" ]; then
+if [ "${FOUND:-}" = "$CFG" ] || [ "${FOUND:-}" = "$HOME/.claude" ]; then
   DROP_FILES="curl -fsSL $RAW | bash -s -- --user --uninstall"
 else
   DROP_FILES="curl -fsSL $RAW | bash -s -- --uninstall --target $(dirname "${FOUND:-/nonexistent}")"
@@ -197,6 +205,7 @@ if [ "$CLAUDE_OK" = 1 ]; then
     PLG="$(claude plugin list 2>&1)"
     if printf '%s' "$PLG" | grep -q "$SKILL"; then
       pass "plugin '$SKILL' is installed"
+      PLUGIN_INSTALLED=1
       if printf '%s' "$PLG" | grep -qi "disabled"; then
         fail "plugin appears disabled"
         remedy "claude plugin enable $SKILL"
@@ -257,7 +266,15 @@ fi
 echo
 echo "======================================"
 if [ "$problems" -eq 0 ]; then
-  echo "VERDICT: healthy. Start a new Claude Code session and run /seo-audit"
+  # The two routes expose different command names. Telling a plugin user to run the
+  # bare /seo-audit earns "Unknown command", which reads as the broken install this
+  # doctor just certified as healthy.
+  if [ "$PLUGIN_INSTALLED" = 1 ] && [ "$STANDALONE_OK" != 1 ]; then
+    RUN_CMD="/$SKILL:seo-audit   (plugin commands are namespaced)"
+  else
+    RUN_CMD="/seo-audit"
+  fi
+  echo "VERDICT: healthy. Start a new Claude Code session and run $RUN_CMD"
   echo
   exit 0
 fi

@@ -4,8 +4,23 @@ This repository is a **skill/plugin knowledge pack** (not a standalone CLI binar
 
 ## 1) Install
 
-**Installer route** (works everywhere, including Claude Code on the web) -- run from
-the root of the project you want to audit:
+One command either way. Both routes end by proving the install can actually run an
+audit -- python3 present, evidence probe executing -- rather than only reporting that
+files were copied.
+
+**Claude Code CLI or desktop** -- register it as a real plugin:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/opsach/seo/main/scripts/install.sh | bash -s -- --plugin
+```
+
+This performs `marketplace add` then `install` in the required order, and confirms the
+plugin appears in `claude plugin list`. Doing those two steps by hand in the wrong
+order is the most common install failure, and the CLI's own error recommends the wrong
+fix; `--plugin` removes the ordering decision entirely.
+
+**Claude Code web, or to commit the setup into a repo** -- run from the root of the
+project you want to audit:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/opsach/seo/main/scripts/install.sh | bash
@@ -16,26 +31,27 @@ Add `-s -- --user` to install once for every project instead of one repo, or
 slash commands, the skill, and the evidence probe load automatically from `.claude/`;
 commit that folder to make the pipeline available in every session with zero setup.
 
-**On Claude Code web this is the only route** -- `/plugin` does not exist there, and
-the container is ephemeral, so a `--user` install disappears with the session.
-Installing into the project and committing `.claude/` is what persists.
+**On Claude Code web the file route is the only one** -- `/plugin` does not exist
+there, and the container is ephemeral, so a `--user` install disappears with the
+session. Installing into the project and committing `.claude/` is what persists.
 
-**Plugin route** (Claude Code CLI/desktop only -- `/plugin` does not exist on web).
-Both commands, in this order -- installing before adding the marketplace fails with an
-error that recommends the wrong fix:
+**Before auditing a client site, confirm you can reach it:**
 
-```
-/plugin marketplace add opsach/seo
-/plugin install seo-geo-consultant@opsach-seo
+```bash
+curl -fsSL .../install.sh | bash -s -- --check clientdomain.com
 ```
 
-`/plugin ...` is typed at the `>` prompt inside a session; `claude plugin ...` is the
-terminal form. The two are not interchangeable, and using one in the other's place is
-the most common install failure. Note also that the marketplace is named `opsach-seo`,
-which is not the repo path -- `@opsach-seo` is the suffix `install` expects.
+`--check` preflights the domain at install time, so a blocked host surfaces before an
+audit rather than halfway through one. A blocked host does not fail the install --
+it is an environment fact, not a bad install.
 
-**Verify either route** by starting a new session and typing `/seo-audit`. Commands
-and agents are loaded at session start, so an install mid-session needs a fresh one.
+**Verify either route** by starting a new session and typing the audit command.
+Commands and agents are loaded at session start, so an install mid-session needs a
+fresh one.
+
+**The two routes name the commands differently.** A file install gives you
+`/seo-audit`; a plugin install namespaces it as `/seo-geo-consultant:seo-audit`, and
+the bare form then returns *"Unknown command"*. That is the namespace, not a failure.
 
 **If anything is off**, run the doctor rather than guessing -- it inspects
 prerequisites, CLI version, registration, the files on disk, and network reach, then
@@ -121,6 +137,9 @@ If installed as a plugin, three commands wrap the most common workflows:
 - `/seo-pipeline [URL or path] [goal] [competitors]` -- full multi-agent department pipeline
 - `/seo-audit [URL or path]` -- full single-session audit (codebase or URL-only)
 - `/aeo-plan [product or URL]` -- quarterly AEO measurement plan
+
+Prefix each with `seo-geo-consultant:` after a plugin install; the short names above
+are what a file install gives you.
 
 ## 5c) Run the multi-agent department pipeline
 
