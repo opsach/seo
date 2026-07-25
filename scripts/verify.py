@@ -227,6 +227,71 @@ check("STANDALONE_FOUND" in doctor,
 check("raw.githubusercontent.com/opsach/seo/main/scripts/install.sh" in doctor,
       "doctor.sh points at the published installer URL")
 
+# install.sh --plugin exists to remove the ordering trap that breaks most CLI
+# installs, so the ordering itself must be verifiable, not merely intended: the
+# marketplace has to be added before the plugin is installed, and the result has to
+# be confirmed against the CLI rather than assumed from a zero exit code.
+installer = read("scripts/install.sh")
+check("--plugin)" in installer, "install.sh accepts --plugin")
+check("--check)" in installer, "install.sh accepts --check")
+if marketplace and plugin:
+    check(f'MARKET="{marketplace.get("name")}"' in installer,
+          "install.sh marketplace name matches marketplace.json",
+          marketplace.get("name", "?"))
+    check(f'SKILL="{plugin.get("name")}"' in installer,
+          "install.sh plugin name matches plugin.json", plugin.get("name", "?"))
+add_at = installer.find("claude plugin marketplace add")
+inst_at = installer.find('claude plugin install "$SKILL@$MARKET"')
+check(add_at != -1 and inst_at != -1 and add_at < inst_at,
+      "install.sh adds the marketplace before installing the plugin",
+      f"add at {add_at}, install at {inst_at}")
+check("claude plugin list" in installer,
+      "install.sh confirms the plugin against 'claude plugin list'")
+
+# An install that copies files but cannot execute the probe would otherwise report
+# success and fail later, mid-audit, as an empty or invented finding.
+check("readiness()" in installer, "install.sh defines a readiness check")
+check(installer.count("readiness ") >= 2,
+      "install.sh runs readiness on both the plugin and file routes")
+check("--help >/dev/null 2>&1" in installer,
+      "install.sh proves seo-probe.py executes, not just that it exists")
+# A broken runtime and an unreachable target host have opposite remedies, and only
+# the first means the install is bad. Collapsing them would either hide a broken
+# install behind exit 0 or condemn a good one because a firewall exists.
+check("INSTALL INCOMPLETE" in installer and "exit 1" in installer,
+      "install.sh exits non-zero when the install cannot run audits")
+check("return 2" in installer,
+      "install.sh separates a blocked target host from a broken install")
+
+# The routes expose different command names: a plugin install namespaces them
+# (`/seo-geo-consultant:seo-audit`) and the bare `/seo-audit` then returns
+# "Unknown command". Printing one closing hint for both routes sends half the users
+# to a command that does not exist, which reads as a failed install.
+check("CMD_PREFIX" in installer,
+      "install.sh varies the command hint by install route")
+# Asserted against $SKILL rather than a literal name: SKILL is already checked
+# against plugin.json above, so the hint stays correct if the plugin is ever renamed.
+check('CMD_PREFIX="$SKILL:"' in installer,
+      "install.sh namespaces the command hint for the plugin route")
+check("PLUGIN_INSTALLED" in doctor,
+      "doctor.sh knows which route is installed before naming a command to run")
+check("$SKILL:seo-audit" in doctor,
+      "doctor.sh names the namespaced command after a plugin install")
+readme_txt = read("README.md")
+check("Unknown command" in readme_txt,
+      "README documents the namespaced-command failure mode")
+
+# CLAUDE_CONFIG_DIR relocates the whole user-level tree that Claude Code reads --
+# skills, agents, commands and the plugin cache. Writing a --user install to
+# ~/.claude while it is set puts the files where nothing loads them, and searching
+# only ~/.claude reports a working install as missing.
+check('DEST="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"' in installer,
+      "install.sh --user honours CLAUDE_CONFIG_DIR")
+check('CFG="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"' in doctor,
+      "doctor.sh honours CLAUDE_CONFIG_DIR")
+check('"$CFG/plugins/cache"' in doctor,
+      "doctor.sh searches the plugin cache under the active config dir")
+
 # ------------------------------------------------------- .claude mirror sync
 print("\n.claude/ mirror")
 mirror = os.path.join(ROOT, ".claude")

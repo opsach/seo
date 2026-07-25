@@ -24,35 +24,65 @@ The skill activates automatically when you mention:
 
 ## Install
 
-### Option A: Installer script (works everywhere, including Claude Code on the web)
+**One command.** Pick the line matching where you run Claude Code. Both are safe to
+re-run, and both finish by proving the install can actually run an audit -- not just
+that files landed.
 
-Run this from the root of the project you want to audit:
+### Claude Code CLI or desktop -- register it as a plugin
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/opsach/seo/main/scripts/install.sh | bash -s -- --plugin
+```
+
+This runs `marketplace add` and `install` for you **in the required order** (the
+ordering trap below is the single most common install failure), confirms the plugin
+appears in `claude plugin list`, then checks that `python3` and the evidence probe
+really execute. Re-running it is a no-op on an already-installed plugin.
+
+> **Plugin commands are namespaced.** After this route the commands are
+> `/seo-geo-consultant:seo-audit`, `/seo-geo-consultant:seo-pipeline`, and
+> `/seo-geo-consultant:aeo-plan`. The bare `/seo-audit` returns *"Unknown command"* --
+> that is the namespace, not a broken install. The file route below is the one that
+> gives you the short names.
+
+### Claude Code on the web, or to commit the setup into a repo
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/opsach/seo/main/scripts/install.sh | bash
 ```
 
-It copies the skill, the 10 agents, the 3 slash commands, and the evidence probe into
-that project's `.claude/` directory, then verifies the install and tells you what
-landed. Claude Code auto-loads `.claude/` -- no `/plugin` command needed, no restart
-beyond starting a new session.
+Run it from the root of the project you want to audit. It copies the skill, the 10
+agents, the 3 slash commands, and the evidence probe into that project's `.claude/`
+directory. Claude Code auto-loads `.claude/` -- no `/plugin` command, which the web
+does not have. Commands keep their short names here: `/seo-audit`, `/seo-pipeline`,
+`/aeo-plan`. **Commit `.claude/`** and every future session on that repo -- CLI,
+desktop, or web -- gets the full pipeline with zero setup.
+
+### Confirm a client site is reachable before you audit it
+
+```bash
+curl -fsSL .../install.sh | bash -s -- --check fitzers.ie
+```
+
+`--check` preflights the domain and tells you, at install time, whether live audits
+will work from this machine -- rather than letting you discover a blocked host halfway
+through an audit. A blocked host is reported as an environment fact and does **not**
+fail the install.
 
 ```bash
 # other useful forms
-curl -fsSL .../install.sh | bash -s -- --user        # install once, available in every project
-curl -fsSL .../install.sh | bash -s -- --ref my-branch # install from a branch or tag
-./scripts/install.sh --target ../client-site          # from a clone, into another project
-./scripts/install.sh --uninstall                      # clean removal
+curl -fsSL .../install.sh | bash -s -- --user           # every project, not just this one
+curl -fsSL .../install.sh | bash -s -- --ref my-branch  # install from a branch or tag
+./scripts/install.sh --target ../client-site            # from a clone, into another project
+./scripts/install.sh --uninstall                        # clean removal
 ```
 
-Re-running it is safe: an existing install is replaced cleanly rather than nested
-inside itself. **Commit the `.claude/` folder** and every future session on that repo
--- CLI, desktop, or web -- gets the full pipeline with zero setup.
-
-### Option B: Plugin install (Claude Code CLI / desktop only)
+<details>
+<summary>Doing the plugin install by hand instead</summary>
 
 **Two commands, and the order matters.** Adding the marketplace first is not optional --
 installing first fails with an error that sends you the wrong way (see the table below).
+This is exactly what `--plugin` automates.
 
 ```
 /plugin marketplace add opsach/seo
@@ -60,12 +90,12 @@ installing first fails with an error that sends you the wrong way (see the table
 ```
 
 `/plugin` exists in the CLI and desktop app. It is **not** available in Claude Code on
-the web -- use Option A there.
+the web.
 
 > **Where you type it matters.** `/plugin ...` goes at the `>` prompt *inside* a running
 > Claude Code session. `claude plugin ...` goes in your *terminal*, at the shell prompt.
 > Never the `claude` prefix inside the session; never the leading slash outside it.
-> Mixing the two is the single most common install failure, and it does not announce
+> Mixing the two is a common install failure, and it does not announce
 > itself -- inside a session, a shell command is just read as a message.
 
 The terminal equivalents:
@@ -78,6 +108,8 @@ claude plugin details seo-geo-consultant   # inventory + token cost
 
 Note that the marketplace is named **`opsach-seo`**, not `seo` -- it does not match the
 repo path you pass to `marketplace add`. `@opsach-seo` is the suffix `install` wants.
+
+</details>
 
 A correct install reports **Skills (4)** and **Agents (10)**. The three slash commands
 are listed under Skills — `aeo-plan`, `seo-audit`, `seo-pipeline`, alongside the
@@ -100,7 +132,7 @@ then prints a deduplicated, ordered list of the exact commands that repair whate
 it found. Exit 0 means the plugin is usable.
 
 The two install routes are alternatives, so the doctor never asks you to run both.
-After an Option A install it reports the unregistered marketplace as expected and
+After a file install it reports the unregistered marketplace as expected and
 still exits 0; if it ever finds *both* a marketplace plugin and a file copy, it flags
 the duplicate -- two copies of the skill, agents and commands load in every session --
 and names the one command that removes the redundant one.
@@ -110,15 +142,16 @@ and names the one command that removes the redundant one.
 | `Plugin "seo-geo-consultant" not found in marketplace "opsach-seo" ... try marketplace update` | You ran `install` before `marketplace add`. **The suggested `marketplace update` is wrong** -- there is nothing to update yet | `claude plugin marketplace add opsach/seo`, *then* install |
 | `Plugin "seo-geo-consultant" not found in marketplace "seo"` | Used the repo name as the marketplace name | The marketplace is `opsach-seo`: `install seo-geo-consultant@opsach-seo` |
 | Typing `claude plugin ...` does nothing / is answered as a chat message | Shell command typed at the in-session `>` prompt | Use `/plugin ...` inside a session, `claude plugin ...` in a terminal |
-| `claude: command not found` after `npm install -g` | npm's global bin is not on `PATH` | Reopen the terminal; if it persists, use Option A -- it needs no CLI at all |
+| `claude: command not found` after `npm install -g` | npm's global bin is not on `PATH` | Reopen the terminal; if it persists, use the file install -- it needs no CLI at all |
 | `unknown command 'plugin'` | Claude Code 1.x -- the plugin system is 2.x | `npm install -g @anthropic-ai/claude-code@latest` |
-| **"`/plugin` isn't available in this environment"** | Expected on Claude Code web — the command exists only in the CLI and desktop app | Use Option A. This is not a broken install |
+| **"`/plugin` isn't available in this environment"** | Expected on Claude Code web — the command exists only in the CLI and desktop app | Use the file install. This is not a broken install |
 | A web session "forgets" the plugin next time | Web containers are ephemeral; a `--user` install lives in `~/.claude` and does not survive | Install into the project and **commit `.claude/`** — that is what persists |
 | `/seo-audit` does not appear after installing | The session started before the files landed | Start a new session -- commands and agents are loaded at session start |
+| `Unknown command: /seo-audit` after a **plugin** install | Plugin commands are namespaced; the short name belongs to the file route | Type `/seo-geo-consultant:seo-audit`, or install via the file route to get the short names |
 | Agents report "plugin files not found" | Nothing installed in any of the searched locations | Re-run the installer; every agent resolves the reference and probe paths across plugin, project, and user installs |
 | Live audit reports "blocked by network policy" | The sandbox's egress policy does not allow the client's domain -- not an install problem | See [Running against a client website](#running-against-a-client-website) |
 
-Nothing above worked? **Option A cannot fail the way Option B can** -- it copies files
+Nothing above worked? **The file install cannot fail the way the plugin route can** -- it copies files
 and verifies the result, with no marketplace, no registration, and no CLI involved.
 
 Contributors can additionally check a clone with:
@@ -144,6 +177,9 @@ python3 scripts/verify.py    # validates manifests, frontmatter, references, mir
 
 - `/seo-pipeline [URL or path] [goal] [competitor URLs]` -- run the full multi-agent department pipeline end to end
 - `/seo-audit [URL or path]` -- run a full single-session audit of the current project, or a URL-only live audit
+
+After a **plugin** install these are namespaced: `/seo-geo-consultant:seo-audit`, and
+so on. A file install keeps the short names shown above.
 - `/aeo-plan [product or URL]` -- generate a quarterly AEO measurement plan
 
 ### Agent Pipeline (10 department subagents)

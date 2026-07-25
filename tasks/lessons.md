@@ -35,12 +35,61 @@
    the check must first establish which route is in use — otherwise it condemns a
    valid setup. Alternatives are shown as alternatives, never as consecutive steps
    in a repair plan.
+8. **Verify the user's literal next keystroke, once per install route.** "The component
+   is loaded" is not "the command runs" — plugin installs namespace their commands,
+   file installs do not. Every script that closes with "now run X" must pick X from the
+   route actually in use.
+9. **A configurable root is resolved through its override, never hardcoded to its
+   default.** `${CLAUDE_CONFIG_DIR:-$HOME/.claude}` once, reused everywhere; searches
+   that could legitimately match either location check both.
 
 ---
 
 ## Lesson Log
 
 > Append new entries here after every correction. Never delete entries.
+
+## [2026-07-25] — Every doc told plugin users to type a command that does not exist
+
+**What happened:** Verifying install-and-run in Claude Code CLI, the plugin route was
+confirmed working — skill, 10 agents, 3 commands all discovered — and then `/seo-audit`
+returned **`Unknown command: /seo-audit`**. Plugin-installed commands are namespaced as
+`/seo-geo-consultant:seo-audit`; only the file route (`.claude/commands/`) gives the
+short name. README, run-guide, `install.sh` and `doctor.sh` all closed with "try
+`/seo-audit`", so every plugin user's first action after a successful install failed in
+a way that reads exactly like a broken install.
+**Root cause:** The two install routes were verified for *component discovery* — does
+the session see the skill, the agents, the commands — and discovery was assumed to
+imply invocability. Nothing ever typed the command the docs prescribe. The inventory
+listing even showed the namespaced name (`seo-geo-consultant:seo-audit`) and it was
+read as cosmetic.
+**Pattern:** Same shape as the `http://`-vs-`https://` lesson: a path verified in one
+configuration was assumed to hold in the other. Here the two configurations are the two
+*install routes*, and the untested one was the route the CLI's own docs steer users to.
+**Rule:** Verify the user's literal next keystroke, not a proxy for it. "The component
+is loaded" is not "the command runs" — type the exact string the docs tell the user to
+type, once per install route, and make the closing hint of every script route-aware.
+**Risk domain:** verification
+**Mode active:** Light
+
+## [2026-07-25] — `--user` installed into a directory nothing reads
+
+**What happened:** `install.sh --user` wrote to `$HOME/.claude` unconditionally, and
+`doctor.sh` searched only `$HOME/.claude` and `$HOME/.claude/plugins/cache`. With
+`CLAUDE_CONFIG_DIR` set, Claude Code reads none of those: a `--user` install reported
+success while the commands never appeared, and the doctor called a healthy
+plugin install "no installed copy found" and prescribed a second, redundant copy.
+**Root cause:** `$HOME/.claude` was treated as the location of the user-level tree
+rather than as its *default*. Both scripts hardcoded the default and never consulted
+the variable that relocates it.
+**Pattern:** Encoding a default as an invariant. The setup that exercises the override
+is exactly the setup nobody tests on, because the maintainer's machine uses the default.
+**Rule:** Resolve configurable roots through their override once
+(`${CLAUDE_CONFIG_DIR:-$HOME/.claude}`) and use that everywhere; where a search can
+legitimately hit either location, search both. Proven by executing a session with the
+override set — the files-present/commands-absent split is invisible to a file check.
+**Risk domain:** verification
+**Mode active:** Light
 
 ## [2026-07-25] — The install path had no failure path of its own
 
@@ -176,7 +225,7 @@ and never emit two mutually exclusive remedies into one ordered plan.
 | Domain | Count | Escalated? |
 |---|---|---|
 | Scope | 0 | — |
-| Verification | 6 | Yes — Active Rules 1-7; `scripts/verify.py` enforces 1, 2, 4, 6 and 7 |
+| Verification | 8 | Yes — Active Rules 1-9; `scripts/verify.py` enforces 1, 2, 4, 6, 7, 8 and 9 |
 | Planning | 0 | — |
 | Communication | 0 | — |
 | Escalation | 0 | — |
