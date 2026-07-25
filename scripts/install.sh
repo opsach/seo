@@ -12,6 +12,7 @@
 # Flags:
 #   --target DIR   where to install (default: current directory)
 #   --user         install into ~/.claude instead of DIR/.claude (available in every project)
+#   --ref REF      branch or tag to install from (default: main)
 #   --uninstall    remove a previous install
 #   --quiet        less output
 #
@@ -24,12 +25,14 @@ SKILL="seo-geo-consultant"
 TARGET="$PWD"
 SCOPE="project"
 MODE="install"
+REF="main"
 QUIET=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --target) TARGET="${2:?--target needs a directory}"; shift 2 ;;
     --user) SCOPE="user"; shift ;;
+    --ref) REF="${2:?--ref needs a branch or tag}"; shift 2 ;;
     --uninstall) MODE="uninstall"; shift ;;
     --quiet) QUIET=1; shift ;;
     -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
@@ -75,8 +78,9 @@ else
   command -v git >/dev/null 2>&1 || die "git is required when not running from a clone"
   TMP="$(mktemp -d)"
   trap 'rm -rf "$TMP"' EXIT
-  say "Fetching $REPO_URL ..."
-  git clone --depth 1 --quiet "$REPO_URL" "$TMP/seo" || die "clone failed -- check network access to github.com"
+  say "Fetching $REPO_URL ($REF) ..."
+  git clone --depth 1 --branch "$REF" --quiet "$REPO_URL" "$TMP/seo" \
+    || die "clone of ref '$REF' failed -- check the ref name and network access to github.com"
   SRC="$TMP/seo"
 fi
 
@@ -92,8 +96,13 @@ cp -R "$SRC/skills/$SKILL" "$DEST/skills/$SKILL"
 
 cp "$SRC"/agents/*.md "$DEST/agents/"
 cp "$SRC"/commands/*.md "$DEST/commands/"
-cp "$SRC"/scripts/seo-probe.py "$DEST/scripts/"
-chmod +x "$DEST/scripts/seo-probe.py"
+if [ -f "$SRC/scripts/seo-probe.py" ]; then
+  cp "$SRC/scripts/seo-probe.py" "$DEST/scripts/"
+  chmod +x "$DEST/scripts/seo-probe.py"
+else
+  say "warning: this ref ($REF) predates scripts/seo-probe.py -- live-site audits will"
+  say "         have no evidence collector. Install from a ref that includes it."
+fi
 
 # ------------------------------------------------------------------- verify
 agents=$(ls "$DEST"/agents/seo-*.md 2>/dev/null | wc -l | tr -d ' ')

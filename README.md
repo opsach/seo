@@ -40,6 +40,7 @@ beyond starting a new session.
 ```bash
 # other useful forms
 curl -fsSL .../install.sh | bash -s -- --user        # install once, available in every project
+curl -fsSL .../install.sh | bash -s -- --ref my-branch # install from a branch or tag
 ./scripts/install.sh --target ../client-site          # from a clone, into another project
 ./scripts/install.sh --uninstall                      # clean removal
 ```
@@ -71,7 +72,8 @@ claude plugin details seo-geo-consultant   # confirms 1 skill, 3 commands, 10 ag
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `/plugin` is not a recognised command | You are on Claude Code web, or a CLI older than 2.0 | Use Option A |
+| **"`/plugin` isn't available in this environment"** | Expected on Claude Code web — the command exists only in the CLI and desktop app | Use Option A. This is not a broken install |
+| A web session "forgets" the plugin next time | Web containers are ephemeral; a `--user` install lives in `~/.claude` and does not survive | Install into the project and **commit `.claude/`** — that is what persists |
 | `/seo-audit` does not appear after installing | The session started before the files landed | Start a new session -- commands and agents are loaded at session start |
 | Agents report "plugin files not found" | Nothing installed in any of the searched locations | Re-run the installer; every agent resolves the reference and probe paths across plugin, project, and user installs |
 | Live audit reports "blocked by network policy" | The sandbox's egress policy does not allow the client's domain -- not an install problem | See [Running against a client website](#running-against-a-client-website) |
