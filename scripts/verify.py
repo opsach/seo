@@ -299,6 +299,14 @@ check('if [ -f "$0" ]' in installer,
 check('curl -fsSL $RAW_URL' in installer,
       "install.sh gives a runnable command when invoked through a pipe")
 
+# `--check HOST` alone asks a question. Running it used to copy the whole plugin into
+# the current directory as a side effect, which is not what the docs promise and not
+# something a reachability check should ever do.
+check("WANT_INSTALL" in installer,
+      "install.sh distinguishes a reachability question from an install request")
+check('MODE="check"' in installer,
+      "install.sh has a check-only mode that installs nothing")
+
 # ------------------------------------------------------- .claude mirror sync
 print("\n.claude/ mirror")
 mirror = os.path.join(ROOT, ".claude")

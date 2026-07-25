@@ -17,7 +17,9 @@
 #   --target DIR   where to install (default: current directory)
 #   --user         install into ~/.claude instead of DIR/.claude (available in every project)
 #   --ref REF      branch or tag to install from (default: main)
-#   --check HOST   after installing, preflight HOST to prove live audits work here
+#   --check HOST   preflight HOST to prove live audits work from here. On its own it
+#                  only checks and installs nothing; alongside an install flag it runs
+#                  as the final step of that install
 #   --uninstall    remove a previous install
 #   --quiet        less output
 #
@@ -36,20 +38,28 @@ MODE="install"
 REF="main"
 CHECK_HOST=""
 QUIET=0
+WANT_INSTALL=0   # did the user actually ask to install anything?
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --plugin) MODE="plugin"; shift ;;
-    --target) TARGET="${2:?--target needs a directory}"; shift 2 ;;
-    --user) SCOPE="user"; shift ;;
+    --plugin) MODE="plugin"; WANT_INSTALL=1; shift ;;
+    --target) TARGET="${2:?--target needs a directory}"; WANT_INSTALL=1; shift 2 ;;
+    --user) SCOPE="user"; WANT_INSTALL=1; shift ;;
     --ref) REF="${2:?--ref needs a branch or tag}"; shift 2 ;;
     --check) CHECK_HOST="${2:?--check needs a host or URL}"; shift 2 ;;
-    --uninstall) MODE="uninstall"; shift ;;
+    --uninstall) MODE="uninstall"; WANT_INSTALL=1; shift ;;
     --quiet) QUIET=1; shift ;;
     -h|--help) sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "install.sh: unknown option $1" >&2; exit 2 ;;
   esac
 done
+
+# `--check HOST` on its own is a question, not an instruction to install. Treating it
+# as a post-install step meant the documented "can I reach this client?" one-liner
+# silently copied the whole plugin into whatever directory the user was standing in.
+if [ -n "$CHECK_HOST" ] && [ "$WANT_INSTALL" = 0 ]; then
+  MODE="check"
+fi
 
 say() { [ "$QUIET" = 1 ] || printf '%s\n' "$*"; }
 die() { printf 'install.sh: %s\n' "$*" >&2; exit 1; }
@@ -164,6 +174,38 @@ finish() {
        exit 1 ;;
   esac
 }
+
+# --------------------------------------------------------------- check route
+# Answer the reachability question against whichever copy of the probe already
+# exists, and install nothing.
+if [ "$MODE" = "check" ]; then
+  CFG="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+  SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || echo "")"
+  probe_path=""
+  for p in "$PWD/.claude/scripts/seo-probe.py" \
+           "$CFG/scripts/seo-probe.py" \
+           "$HOME/.claude/scripts/seo-probe.py" \
+           "${SELF_DIR:-/nonexistent}/seo-probe.py"; do
+    [ -f "$p" ] && { probe_path="$p"; break; }
+  done
+  if [ -z "$probe_path" ]; then
+    probe_path="$(ls -t "$CFG"/plugins/cache/*/"$SKILL"/*/scripts/seo-probe.py \
+                     "$HOME"/.claude/plugins/cache/*/"$SKILL"/*/scripts/seo-probe.py \
+                  2>/dev/null | head -1 || true)"
+  fi
+  [ -n "$probe_path" ] || die \
+"nothing to check with -- no installed copy of seo-probe.py was found.
+  Install first, then re-run the check:
+      curl -fsSL $RAW_URL | bash -s -- --plugin"
+
+  say "Checking $CHECK_HOST"
+  ready_rc=0; readiness "$probe_path" || ready_rc=$?
+  case "$ready_rc" in
+    0) exit 0 ;;
+    2) exit 0 ;;   # the host is out of reach; the install is still fine
+    *) exit 1 ;;
+  esac
+fi
 
 # -------------------------------------------------------------- plugin route
 # `claude plugin install` before `marketplace add` fails with "not found in
