@@ -94,10 +94,16 @@ Verified end to end against `github.com/opsach/seo` on Claude Code CLI 2.1.220.
 curl -fsSL https://raw.githubusercontent.com/opsach/seo/main/scripts/doctor.sh | bash
 ```
 
-It checks prerequisites, the CLI version, marketplace and plugin registration, the
-files actually on disk in all four install locations, and network reachability --
+It checks prerequisites, the CLI version, the files actually on disk in all four
+install locations, marketplace and plugin registration, and network reachability --
 then prints a deduplicated, ordered list of the exact commands that repair whatever
 it found. Exit 0 means the plugin is usable.
+
+The two install routes are alternatives, so the doctor never asks you to run both.
+After an Option A install it reports the unregistered marketplace as expected and
+still exits 0; if it ever finds *both* a marketplace plugin and a file copy, it flags
+the duplicate -- two copies of the skill, agents and commands load in every session --
+and names the one command that removes the redundant one.
 
 | Symptom | Cause | Fix |
 |---|---|---|

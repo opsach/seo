@@ -22,6 +22,14 @@ RAW="https://raw.githubusercontent.com/opsach/seo/main/scripts/install.sh"
 # reinstalling replaces the tree wholesale -- so they must dedupe to one plan line.
 REINSTALL="curl -fsSL $RAW | bash -s -- --user   (replaces a broken or partial install)"
 
+# The two install routes are alternatives, not layers: the marketplace registers a
+# plugin, install.sh copies plain files and never touches the plugin system. Section 4
+# therefore runs before section 5, and section 5 reads its verdict -- an unregistered
+# marketplace is a finding only when no complete file install exists. Getting this
+# backwards told users with a working install to add a second copy of it.
+STANDALONE_FOUND=0   # a file-route copy exists, complete or not
+STANDALONE_OK=0      # ...and it passed every file check
+
 problems=0
 blockers=0
 fix_lines=()
@@ -106,9 +114,80 @@ else
   remedy "npm install -g @anthropic-ai/claude-code   (then reopen your terminal so PATH updates)"
 fi
 
-# ---------------------------------------------------- 4. marketplace + plugin
+# ----------------------------------------------------------- 4. files on disk
 echo
-echo "4. Marketplace and plugin registration"
+echo "4. Installed files"
+
+FOUND=""       # directory holding a usable copy
+FOUND_KIND=""  # how it got there: "plugin" (marketplace) or "standalone" (install.sh)
+FILES_OK=1
+for d in "${CLAUDE_PLUGIN_ROOT:-}" "$PWD/.claude" "$HOME/.claude"; do
+  if [ -n "$d" ] && [ -f "$d/skills/$SKILL/SKILL.md" ]; then
+    FOUND="$d"
+    if [ "$d" = "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+      FOUND_KIND="plugin"
+    else
+      FOUND_KIND="standalone"; STANDALONE_FOUND=1
+    fi
+    break
+  fi
+done
+if [ -z "$FOUND" ] && [ -d "$HOME/.claude/plugins/cache" ]; then
+  CACHED="$(find "$HOME/.claude/plugins/cache" -type f -name SKILL.md -path "*$SKILL*" 2>/dev/null | head -1)"
+  [ -n "$CACHED" ] && { FOUND="$(cd "$(dirname "$CACHED")/../.." && pwd)"; FOUND_KIND="plugin"; }
+fi
+
+if [ -n "$FOUND" ]; then
+  pass "found at $FOUND"
+  agents=$(ls "$FOUND"/agents/seo-*.md 2>/dev/null | wc -l | tr -d ' ')
+  cmds=$(ls "$FOUND"/commands/*.md 2>/dev/null | wc -l | tr -d ' ')
+  refs=$(ls "$FOUND/skills/$SKILL/references"/*.md 2>/dev/null | wc -l | tr -d ' ')
+
+  [ "${agents:-0}" -ge 10 ] && pass "agents: $agents (expected 10)" || {
+    fail "agents: ${agents:-0} (expected 10)"
+    remedy "$REINSTALL"; FILES_OK=0; }
+  [ "${cmds:-0}" -ge 3 ] && pass "commands: $cmds (expected 3)" || {
+    fail "commands: ${cmds:-0} (expected 3)"
+    remedy "$REINSTALL"; FILES_OK=0; }
+  [ "${refs:-0}" -ge 13 ] && pass "references: $refs (expected 13+)" || {
+    fail "references: ${refs:-0} (expected 13+)"
+    remedy "$REINSTALL"; FILES_OK=0; }
+
+  if [ -d "$FOUND/skills/$SKILL/$SKILL" ]; then
+    fail "nested install detected: $FOUND/skills/$SKILL/$SKILL"
+    remedy "$REINSTALL"
+    FILES_OK=0
+  fi
+
+  PROBE=""
+  for p in "$FOUND/scripts/seo-probe.py" "$FOUND/../scripts/seo-probe.py"; do
+    [ -f "$p" ] && { PROBE="$p"; break; }
+  done
+  if [ -n "$PROBE" ]; then
+    pass "evidence collector: $PROBE"
+  else
+    warn "seo-probe.py not found -- live-site audits have no evidence collector"
+    remedy "$REINSTALL"
+  fi
+
+  # A complete standalone tree is a finished install, not a half-done plugin one.
+  [ "$FOUND_KIND" = "standalone" ] && [ "$FILES_OK" = 1 ] && STANDALONE_OK=1
+else
+  blocker "no installed copy found in CLAUDE_PLUGIN_ROOT, ./.claude, ~/.claude, or the plugin cache"
+  remedy "curl -fsSL $RAW | bash -s -- --user   (installs without the plugin system)"
+fi
+
+# ---------------------------------------------------- 5. marketplace + plugin
+echo
+echo "5. Marketplace and plugin registration"
+
+# Removing the file copy is scope-specific: ~/.claude came from --user, anything
+# else came from --target <project>.
+if [ "${FOUND:-}" = "$HOME/.claude" ]; then
+  DROP_FILES="curl -fsSL $RAW | bash -s -- --user --uninstall"
+else
+  DROP_FILES="curl -fsSL $RAW | bash -s -- --uninstall --target $(dirname "${FOUND:-/nonexistent}")"
+fi
 
 if [ "$CLAUDE_OK" = 1 ]; then
   MKT="$(claude plugin marketplace list 2>&1)"
@@ -122,10 +201,33 @@ if [ "$CLAUDE_OK" = 1 ]; then
         fail "plugin appears disabled"
         remedy "claude plugin enable $SKILL"
       fi
+      # Both routes at once is the one state that genuinely needs fixing here:
+      # every session loads the skill, the agents and the commands twice.
+      if [ "$STANDALONE_OK" = 1 ]; then
+        warn "a second, plain-file copy is installed at $FOUND -- both will load"
+        remedy "$DROP_FILES   (keep the marketplace copy; it updates in place)"
+      fi
+    elif [ "$STANDALONE_FOUND" = 1 ]; then
+      info "plugin not registered -- expected; section 4 found a file install"
     else
       fail "plugin '$SKILL' is NOT installed"
       remedy "claude plugin install $SKILL@$MARKET"
     fi
+  elif [ "$STANDALONE_FOUND" = 1 ]; then
+    # Broken or not, the file route is the one this user is on, and section 4 has
+    # already prescribed its repair. Registering a marketplace fixes nothing here.
+    info "marketplace '$MARKET' not registered -- expected, and not a problem: the file"
+    info "install found in section 4 is the route that bypasses the plugin system"
+  elif [ -z "$FOUND" ]; then
+    # Nothing anywhere. Section 4 already put the installer in the plan; the plugin
+    # system is the *alternative* to it, so it stays out of the plan -- a user who
+    # ran both lines would end up with two copies.
+    info "marketplace '$MARKET' is not registered either"
+    info "pick one route, not both. Section 4's installer needs no CLI and no"
+    info "registration. To use the plugin system instead of it:"
+    info "  claude plugin marketplace add $REPO"
+    info "  claude plugin install $SKILL@$MARKET   (in that order -- installing"
+    info "  first gives a misleading error telling you to run 'marketplace update')"
   else
     fail "marketplace '$MARKET' is NOT registered"
     info "installing before adding gives a misleading error that tells you to run"
@@ -135,55 +237,6 @@ if [ "$CLAUDE_OK" = 1 ]; then
   fi
 else
   info "skipped -- no usable claude CLI"
-fi
-
-# ----------------------------------------------------------- 5. files on disk
-echo
-echo "5. Installed files"
-
-FOUND=""
-for d in "${CLAUDE_PLUGIN_ROOT:-}" "$PWD/.claude" "$HOME/.claude"; do
-  [ -n "$d" ] && [ -f "$d/skills/$SKILL/SKILL.md" ] && { FOUND="$d"; break; }
-done
-if [ -z "$FOUND" ] && [ -d "$HOME/.claude/plugins/cache" ]; then
-  CACHED="$(find "$HOME/.claude/plugins/cache" -type f -name SKILL.md -path "*$SKILL*" 2>/dev/null | head -1)"
-  [ -n "$CACHED" ] && FOUND="$(cd "$(dirname "$CACHED")/../.." && pwd)"
-fi
-
-if [ -n "$FOUND" ]; then
-  pass "found at $FOUND"
-  agents=$(ls "$FOUND"/agents/seo-*.md 2>/dev/null | wc -l | tr -d ' ')
-  cmds=$(ls "$FOUND"/commands/*.md 2>/dev/null | wc -l | tr -d ' ')
-  refs=$(ls "$FOUND/skills/$SKILL/references"/*.md 2>/dev/null | wc -l | tr -d ' ')
-
-  [ "${agents:-0}" -ge 10 ] && pass "agents: $agents (expected 10)" || {
-    fail "agents: ${agents:-0} (expected 10)"
-    remedy "$REINSTALL"; }
-  [ "${cmds:-0}" -ge 3 ] && pass "commands: $cmds (expected 3)" || {
-    fail "commands: ${cmds:-0} (expected 3)"
-    remedy "$REINSTALL"; }
-  [ "${refs:-0}" -ge 13 ] && pass "references: $refs (expected 13+)" || {
-    fail "references: ${refs:-0} (expected 13+)"
-    remedy "$REINSTALL"; }
-
-  if [ -d "$FOUND/skills/$SKILL/$SKILL" ]; then
-    fail "nested install detected: $FOUND/skills/$SKILL/$SKILL"
-    remedy "$REINSTALL"
-  fi
-
-  PROBE=""
-  for p in "$FOUND/scripts/seo-probe.py" "$FOUND/../scripts/seo-probe.py"; do
-    [ -f "$p" ] && { PROBE="$p"; break; }
-  done
-  if [ -n "$PROBE" ]; then
-    pass "evidence collector: $PROBE"
-  else
-    warn "seo-probe.py not found -- live-site audits have no evidence collector"
-    remedy "$REINSTALL"
-  fi
-else
-  blocker "no installed copy found in CLAUDE_PLUGIN_ROOT, ./.claude, ~/.claude, or the plugin cache"
-  remedy "curl -fsSL $RAW | bash -s -- --user   (installs without the plugin system)"
 fi
 
 # --------------------------------------------------------------- 6. network
