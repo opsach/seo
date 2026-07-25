@@ -56,6 +56,80 @@
 ## Completed Tasks
 > Append completed tasks below with date. Do not delete.
 
+### [2026-07-25] Fix install + live-site audit; add evidence toolkit (Mode: Light)
+
+**Reported problem:** "can not install plugin, can not run on client website."
+
+**Root causes found (all reproduced in-session):**
+1. `/plugin` does not exist in Claude Code on the web — the README led with it, and
+   the manual fallback was buried as "Option B" with copy-paste commands.
+2. The manual install's `cp -r ... .claude/skills/` nests into
+   `skills/seo-geo-consultant/seo-geo-consultant/` on a re-run under BSD/macOS `cp`
+   (GNU `cp` merges instead), and the README explicitly told users to re-run it.
+3. The committed `.claude/` mirror was stale — it predated the 2026-07-15 agent
+   edits, so manual installs shipped older agents than the plugin route.
+4. **Live audits had no failure path.** `curl` and `WebFetch` both return an opaque
+   403 from the egress proxy when the environment's network policy disallows the
+   target host. Nothing in the plugin recognised this, so a blocked audit would
+   either die confusingly or continue on recalled facts.
+5. `WebFetch` was treated as a co-equal fetch tool, but it converts pages to markdown
+   through a summarising model — destroying `<title>`, meta, canonical, hreflang,
+   `og:*`, JSON-LD, and status codes, i.e. everything a live audit is about.
+
+**What was done:**
+- NEW `scripts/seo-probe.py` (stdlib only): `preflight | page | robots | redirects |
+  sitemap | site`. Measures status/redirect chains, TTFB, tag lengths, canonical,
+  robots directives, heading outline, 120-180w GEO section band, JSON-LD types **and
+  parse errors with positions**, og/twitter, hreflang, alt gaps, compression/cache,
+  and a server-vs-client rendering verdict. Exit codes 3/4/5 separate "network policy
+  blocked you" from "the site blocks bots" from "unreachable", each with a remedy.
+- NEW `scripts/install.sh` — idempotent, verifies its own result, `--user`,
+  `--target`, `--uninstall`; also regenerates the `.claude/` mirror.
+- NEW `scripts/verify.py` — 69 checks: manifests, frontmatter, agent-name/filename
+  match, reference-link integrity both ways, README consistency, pipeline agent
+  references, script compilation, shared-block presence, and `.claude/` mirror
+  equality. Caught root cause 3 on its first run.
+- All 10 agents: deterministic file resolver that prints **absolute** reference and
+  probe paths across plugin / project / user installs. The 7 fetching agents also
+  carry non-negotiable evidence rules (preflight first, probe is the evidence source,
+  WebFetch is prose-only, never report what you did not fetch) plus their own
+  department-specific probe commands.
+- `/seo-pipeline` gained Stage 0 (resolve toolkit + preflight target, stop on block)
+  and a no-fabrication rule of engagement; `/seo-audit` gained preflight + evidence
+  citation rules.
+- `live-site-audit.md` rewritten around preflight → evidence pack → interpretation,
+  with an exit-code table and a tool-discipline matrix.
+- SKILL.md: new Toolkit section, mode 5 rewritten preflight-first.
+- README: installer script is now Option A, `/plugin` marked CLI/desktop-only, plus
+  an install-troubleshooting table and a "Running against a client website" section
+  covering the sandbox network policy.
+- plugin.json 1.2.0 → 1.3.0.
+
+**What was verified:**
+- GitHub-sourced plugin install end to end on Claude Code CLI 2.1.220
+  (`marketplace add opsach/seo` → `install` → `details` shows 1 skill, 3 commands,
+  10 agents). Closes the long-standing backlog item.
+- `claude plugin validate` passes with zero warnings.
+- Installer: fresh install, re-run (no nesting), uninstall (no leftovers).
+- Resolver returns correct absolute paths in four situations: project `.claude/`,
+  user `~/.claude/`, marketplace plugin cache, and `CLAUDE_PLUGIN_ROOT` set — and
+  reports `PLUGIN FILES NOT FOUND` when nothing is installed.
+- Probe exercised against a local fixture site covering redirect chains, soft-404,
+  robots syntax errors, AI-crawler blocks, fake `lastmod`, broken JSON-LD, missing
+  alt text, duplicate H1s, and an empty SPA shell — every one detected.
+- Blocked-domain path confirmed against a real external host: exit 3 with the
+  remediation text, no fabricated findings.
+- `python3 scripts/verify.py` — 69 checks, 0 failures, 0 warnings.
+
+**Noted for follow-up (backlog):**
+- [ ] Dry-run the full `/seo-pipeline` against a real client site from an environment
+  with network access — the probe and preflight are verified, the multi-agent
+  orchestration on a live target is not.
+- [ ] Optional headless-render diff (Chromium is available in web sessions): compare
+  raw HTML against the rendered DOM to quantify what client-rendering hides.
+- [ ] Dry-run once with a real GSC + Screaming Frog export in `seo-data/` to validate
+  the header-detection table in `owned-data-guide.md`.
+
 ### [2026-07-15] Manual `.claude/` install fallback (Mode: Light)
 
 **What was done:**

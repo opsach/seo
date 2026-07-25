@@ -4,12 +4,27 @@ This repository is a **skill/plugin knowledge pack** (not a standalone CLI binar
 
 ## 1) Install
 
-In Claude Code, add this repository as a plugin marketplace and install:
+**Installer route** (works everywhere, including Claude Code on the web) -- run from
+the root of the project you want to audit:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/opsach/seo/main/scripts/install.sh | bash
+```
+
+Add `-s -- --user` to install once for every project instead of one repo. Re-running
+is safe. Agents, slash commands, the skill, and the evidence probe load automatically
+from `.claude/`; commit that folder to make the pipeline available in every session
+(including web) with zero setup.
+
+**Plugin route** (Claude Code CLI/desktop only -- `/plugin` does not exist on web):
 
 ```
 /plugin marketplace add opsach/seo
 /plugin install seo-geo-consultant@opsach-seo
 ```
+
+**Verify either route** by starting a new session and typing `/seo-audit`. Commands
+and agents are loaded at session start, so an install mid-session needs a fresh one.
 
 ## 2) Open your target project
 
@@ -116,7 +131,17 @@ Each department can also be invoked directly for single-domain questions, e.g.
 
 ## 6) Run a live site audit (URL only)
 
-Use a prompt like:
+**Preflight first.** From the project where you installed:
+
+```bash
+python3 .claude/scripts/seo-probe.py preflight https://client-site.com
+```
+
+Exit 0 means fetching works. Exit 3 means the environment's network policy blocked
+the request before it left the machine -- fix that first (see Troubleshooting below);
+an audit run past a blocked preflight is fabricated, not fetched.
+
+Then:
 
 ```text
 Run a live SEO/GEO audit of https://client-site.com using
@@ -125,8 +150,10 @@ Format the output with references/audit-report-template.md.
 ```
 
 Expected output:
-- Findings from fetched HTML, robots.txt, sitemap, redirects, and performance signals
-- Explicit "not verifiable without code access" list
+- Findings citing measured values from the probe -- status codes, tag lengths,
+  robots verdicts with line numbers, JSON-LD parse errors, rendering verdict
+- Explicit "not verifiable without code access" list, and the sample size stated
+  ("5 of 412 sitemap URLs probed on <date>")
 - Same severity/priority/confidence structure as a codebase audit
 
 ## 7) Quality checklist before accepting output
@@ -139,10 +166,32 @@ Expected output:
 
 ## Troubleshooting
 
-### "Tool isn't running"
-- Confirm plugin installed successfully in Claude Code
+### "Tool isn't running" / slash commands missing
+- Commands and agents load at **session start** -- start a new session after installing
+- Confirm the files landed: `ls .claude/agents .claude/commands .claude/skills`
+- From a clone of the plugin repo, run `python3 scripts/verify.py` to validate the
+  manifests, frontmatter, references, and `.claude/` mirror in one pass
 - Confirm you're inside the target project folder
 - Use explicit mode language: "Run Full SEO/GEO Audit"
+
+### "`/plugin` is not a recognised command"
+Expected on Claude Code web -- `/plugin` exists only in the CLI and desktop app.
+Use the installer route in section 1.
+
+### "Can't reach the client's website"
+Run `seo-probe.py preflight <origin>` and read the exit code:
+
+- **3 -- blocked by network policy.** The sandbox refused the connection. Change the
+  environment's network access setting (or allowlist the domain) and start a new
+  session (<https://code.claude.com/docs/en/claude-code-on-the-web>), run the audit
+  from Claude Code CLI instead, or switch to owned-data mode with client exports
+  (`owned-data-guide.md`).
+- **4 -- the site blocks automated fetchers.** Report it as a finding; AI crawlers are
+  refused the same way. Never try to defeat bot protection.
+- **5 -- unreachable.** DNS, TLS, or timeout. Confirm the domain with the client.
+
+Whatever the cause, do not accept an audit that continues past a failed preflight:
+its findings were not measured.
 
 ### "Output is too generic"
 - Ask the model to use `references/audit-report-template.md` exactly

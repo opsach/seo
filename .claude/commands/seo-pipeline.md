@@ -15,6 +15,40 @@ URLs if present.)
 
 ## Pipeline
 
+### Stage 0 — Preflight (you do this yourself, before any department runs)
+
+Locate the toolkit and confirm the target is reachable. Thirty seconds here prevents
+an entire pipeline of departments producing findings about a site nobody could fetch.
+
+```bash
+for d in "$CLAUDE_PLUGIN_ROOT" .claude ../.claude "$HOME/.claude" $(ls -dt "$HOME"/.claude/plugins/cache/*/seo-geo-consultant/*/ 2>/dev/null); do
+  [ -n "$d" ] && [ -d "$d/skills/seo-geo-consultant/references" ] || continue
+  k=$(cd "$d" && pwd)
+  echo "REFERENCES: $k/skills/seo-geo-consultant/references"
+  ls "$k/scripts/seo-probe.py" "$k/skills/seo-geo-consultant/scripts/seo-probe.py" 2>/dev/null | head -1 | sed 's/^/PROBE:      /'
+  exit 0
+done
+echo "PLUGIN FILES NOT FOUND"
+```
+
+The printed paths are absolute; shell variables do not survive between tool calls, so
+pass the literal `REFERENCES` and `PROBE` paths to every department you launch —
+that saves each of them from re-resolving.
+
+- `PLUGIN FILES NOT FOUND` → the plugin files are missing. Tell the user to run the
+  installer (`scripts/install.sh`) and stop.
+- **Live-URL target:** run `python3 <PROBE> preflight <origin>`.
+  - exit 0 → proceed, and pass the paths plus the preflight result to every department.
+  - exit 3 → **the environment's network policy blocked the fetch.** Stop the
+    pipeline. Report the blocked host and the remediation the probe prints, and offer
+    the two alternatives: run from Claude Code CLI with normal network access, or
+    switch to owned-data mode using client exports (`owned-data-guide.md`).
+  - exit 4 → the site blocks automated fetchers. Record it as a GEO finding for the
+    geo department and continue only with what can legitimately be fetched.
+  - exit 5 → unreachable. Confirm the domain with the user before spending departments.
+- **Codebase target:** confirm the path exists and is the intended app (in a monorepo,
+  resolve which app before Stage 1).
+
 ### Stage 1 — Intake (sequential, blocking)
 First, the **one-time data call**: check whether a `seo-data/` directory exists in
 the target (or the user pointed to data files). If nothing is found, ask the user
@@ -73,5 +107,8 @@ which items to ship.
   drop a department.
 - **No freelancing:** findings come from departments only. If you notice something
   yourself, hand it to the relevant department as a note in its prompt.
+- **No fabrication, ever:** if a department reports it could not fetch or read
+  something, that stays in "Could Not Verify" through to the final report. Never let
+  a gap get smoothed into a confident finding on the way to the boardroom.
 - For a quick single-domain question, don't run the whole pipeline — run the one
   relevant department directly (or just use the seo-geo-consultant skill).

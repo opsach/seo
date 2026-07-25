@@ -10,13 +10,67 @@
 
 > Rules promoted from lessons. These are standing instructions.
 
-*(none yet — populated as lessons are captured)*
+1. **Duplicated content must be generated, never hand-copied.** If a file exists in
+   two places (source + `.claude/` mirror), a script produces the copy and
+   `scripts/verify.py` proves they match. Hand-copies drift silently.
+2. **Instructions that span tool calls must carry absolute paths.** Shell variables,
+   `cd` state, and exported env do not survive between Bash tool calls. Any agent
+   instruction of the form "set X then use $X later" is broken by construction.
+3. **Ship the failure path, not just the happy path.** Every external dependency
+   (network, file location, tool availability) needs a check that produces a specific
+   diagnosis and a specific remedy. "It didn't work" is the bug.
+4. **Run `python3 scripts/verify.py` before every commit.** It is the only test this
+   repo has.
 
 ---
 
 ## Lesson Log
 
 > Append new entries here after every correction. Never delete entries.
+
+## [2026-07-25] — Hand-copied `.claude/` mirror drifted from source
+
+**What happened:** The committed `.claude/` mirror still contained the pre-fix agent
+files; the manual-install path (the one users on Claude Code web actually use) had
+been shipping stale agents since 2026-07-15. Nobody noticed because nothing compared
+the two trees.
+**Root cause:** The mirror was created by hand-running `cp` in one session, and the
+follow-up edits landed only in `agents/`. A duplicate with no generator and no check
+is guaranteed to drift.
+**Pattern:** Duplication without automation. The second copy is always the stale one.
+**Rule:** Generate every duplicate with `scripts/install.sh`; prove equality with
+`scripts/verify.py` before commit.
+**Risk domain:** verification
+**Mode active:** Light
+
+## [2026-07-25] — Agent instructions assumed shell state persists
+
+**What happened:** The first version of the file-resolver block told agents to set
+`SEO_KIT=...` in one Bash call and use `"$SEO_KIT/scripts/seo-probe.py"` in later
+calls. Each Bash tool call is a fresh shell, so every later command would have
+expanded to `/scripts/seo-probe.py` and failed.
+**Root cause:** Wrote the instructions as if for an interactive terminal session
+rather than for a sequence of independent tool calls.
+**Pattern:** Authoring agent instructions against the wrong execution model.
+**Rule:** Resolver commands print absolute paths; instructions tell the agent to reuse
+the printed value literally. `verify.py` fails the build on any `$SEO_KIT` reference.
+**Risk domain:** verification
+**Mode active:** Light
+
+## [2026-07-25] — Live audits had no failure path
+
+**What happened:** URL-only audits could not run in a sandboxed environment, and the
+plugin had nothing to say about it: `curl` and `WebFetch` both returned an opaque 403
+from the egress proxy, with no instruction on what that meant or what to do.
+**Root cause:** The live-audit procedure documented only the successful path. The
+possibility that fetching is refused before it leaves the machine was never modelled.
+**Pattern:** Designing for the happy path leaves the agent to improvise on failure —
+and an improvising auditor writes findings it did not measure.
+**Rule:** Every external dependency gets a preflight with distinct exit codes and a
+named remedy per code. Agents stop on a failed preflight; they never downgrade to
+recalled facts.
+**Risk domain:** verification
+**Mode active:** Light
 
 ---
 
@@ -42,7 +96,7 @@
 | Domain | Count | Escalated? |
 |---|---|---|
 | Scope | 0 | — |
-| Verification | 0 | — |
+| Verification | 3 | Yes — Active Rules 1-4; `scripts/verify.py` enforces 1, 2 and 4 |
 | Planning | 0 | — |
 | Communication | 0 | — |
 | Escalation | 0 | — |
