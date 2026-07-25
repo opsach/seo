@@ -22,6 +22,35 @@ The skill activates automatically when you mention:
 - AI search optimization, ChatGPT visibility, Perplexity
 - Building landing pages, marketing pages, or blog pages
 
+## Quick start (Claude Code CLI)
+
+Copy these three lines. Nothing else is required.
+
+```bash
+# 1. Install (terminal, not inside a Claude Code session)
+curl -fsSL https://raw.githubusercontent.com/opsach/seo/main/scripts/install.sh | bash -s -- --plugin
+
+# 2. Optional -- confirm you can actually reach the site you intend to audit.
+#    On its own, --check only checks: it installs nothing and changes no directory.
+curl -fsSL https://raw.githubusercontent.com/opsach/seo/main/scripts/install.sh | bash -s -- --check yourclient.com
+```
+
+Quit Claude Code and reopen it (components load at session start), then inside the
+session:
+
+```
+/seo-geo-consultant:seo-audit https://yourclient.com
+```
+
+That installs for **your user account**, so it works in every project. Prefer the
+short `/seo-audit` command instead? Use the file route below -- plugin commands are
+namespaced, file-route commands are not.
+
+Names this plugin uses, if you ever need them by hand: marketplace `opsach-seo`,
+plugin `seo-geo-consultant`, repo `opsach/seo`.
+
+---
+
 ## Install
 
 **One command.** Pick the line matching where you run Claude Code. Both are safe to

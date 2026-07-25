@@ -292,6 +292,21 @@ check('CFG="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"' in doctor,
 check('"$CFG/plugins/cache"' in doctor,
       "doctor.sh searches the plugin cache under the active config dir")
 
+# The documented way to run this script is `curl ... | bash`, where $0 is the string
+# "bash". Any instruction built from $0 is then a command the user cannot run.
+check('if [ -f "$0" ]' in installer,
+      "install.sh only names $0 when it is a real file, not when piped from curl")
+check('curl -fsSL $RAW_URL' in installer,
+      "install.sh gives a runnable command when invoked through a pipe")
+
+# `--check HOST` alone asks a question. Running it used to copy the whole plugin into
+# the current directory as a side effect, which is not what the docs promise and not
+# something a reachability check should ever do.
+check("WANT_INSTALL" in installer,
+      "install.sh distinguishes a reachability question from an install request")
+check('MODE="check"' in installer,
+      "install.sh has a check-only mode that installs nothing")
+
 # ------------------------------------------------------- .claude mirror sync
 print("\n.claude/ mirror")
 mirror = os.path.join(ROOT, ".claude")
