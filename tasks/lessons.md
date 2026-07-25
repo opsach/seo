@@ -25,12 +25,42 @@
    403 carrying `x-deny-reason` or an allowlist-denial phrase is exit 3 with an empty
    body — never page content. Exercise every fetch path over both `http://` and
    `https://`; they fail differently.
+6. **Installation is a failure path too, and it must be diagnosable.** A clone that
+   passes `verify.py` proves nothing about a user's machine. Every install route
+   carries `scripts/doctor.sh`, which names the failing step and the exact repair
+   command. Where an upstream tool's own error message points the wrong way, say so
+   in the docs — do not restate it.
 
 ---
 
 ## Lesson Log
 
 > Append new entries here after every correction. Never delete entries.
+
+## [2026-07-25] — The install path had no failure path of its own
+
+**What happened:** A user reported "can not install plugin ... always giving error"
+and could not say which step failed. Nothing in the repo could answer the question:
+`verify.py` checks a *clone*, not an *install*, and every install document described
+only the successful sequence. The best available help was a guess between four
+possible causes.
+**Root cause:** Active Rule 3 ("ship the failure path") had been applied to the
+plugin's runtime dependencies — network fetches got preflight and exit codes — but
+never to the plugin's own installation. Installing is itself an external dependency
+chain (npm → PATH → CLI version → git → GitHub → marketplace registration → on-disk
+files), and not one link had a diagnosis.
+**Aggravating factor:** the CLI's own error for the most likely mistake actively
+misdirects. Running `install` before `marketplace add` returns *"not found in
+marketplace ... try `claude plugin marketplace update`"* — and `update` cannot fix a
+marketplace that was never added, so following the advice loops.
+**Pattern:** Verification aimed at the artifact, not at the user's first contact with
+it. A repo that validates perfectly can still be uninstallable, and the maintainer
+never sees it because the maintainer's machine is already set up.
+**Rule:** Every install route ships a diagnostic that names the failing step and the
+command that repairs it (`scripts/doctor.sh`). When an upstream tool's error message
+is wrong, the docs must contradict it explicitly rather than repeat it.
+**Risk domain:** verification
+**Mode active:** Light
 
 ## [2026-07-25] — Probe audited the egress proxy's denial page as if it were the client site
 
@@ -123,7 +153,7 @@ recalled facts.
 | Domain | Count | Escalated? |
 |---|---|---|
 | Scope | 0 | — |
-| Verification | 4 | Yes — Active Rules 1-5; `scripts/verify.py` enforces 1, 2 and 4 |
+| Verification | 5 | Yes — Active Rules 1-6; `scripts/verify.py` enforces 1, 2, 4 and 6 |
 | Planning | 0 | — |
 | Communication | 0 | — |
 | Escalation | 0 | — |

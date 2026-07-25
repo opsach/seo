@@ -194,10 +194,26 @@ for rel in ("scripts/seo-probe.py", "scripts/verify.py"):
                         capture_output=True).returncode == 0
     check(ok, f"{rel} compiles")
     check(os.access(path, os.X_OK), f"{rel} is executable")
-sh = os.path.join(ROOT, "scripts/install.sh")
-check(subprocess.run(["bash", "-n", sh], capture_output=True).returncode == 0,
-      "scripts/install.sh parses")
-check(os.access(sh, os.X_OK), "scripts/install.sh is executable")
+for rel in ("scripts/install.sh", "scripts/doctor.sh"):
+    sh = os.path.join(ROOT, rel)
+    check(subprocess.run(["bash", "-n", sh], capture_output=True).returncode == 0,
+          f"{rel} parses")
+    check(os.access(sh, os.X_OK), f"{rel} is executable")
+
+# doctor.sh is the failure path for installation itself, so its own advice must be
+# runnable: the marketplace and plugin names it prints have to match the manifests,
+# and it must exit non-zero when it finds problems (a doctor that always exits 0
+# reports "healthy" to CI and to the user alike).
+doctor = read("scripts/doctor.sh")
+if marketplace and plugin:
+    check(f'MARKET="{marketplace.get("name")}"' in doctor,
+          "doctor.sh marketplace name matches marketplace.json",
+          marketplace.get("name", "?"))
+    check(f'SKILL="{plugin.get("name")}"' in doctor,
+          "doctor.sh plugin name matches plugin.json", plugin.get("name", "?"))
+check("exit 1" in doctor, "doctor.sh exits non-zero on problems")
+check("raw.githubusercontent.com/opsach/seo/main/scripts/install.sh" in doctor,
+      "doctor.sh points at the published installer URL")
 
 # ------------------------------------------------------- .claude mirror sync
 print("\n.claude/ mirror")

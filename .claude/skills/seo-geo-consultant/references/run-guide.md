@@ -20,15 +20,30 @@ commit that folder to make the pipeline available in every session with zero set
 the container is ephemeral, so a `--user` install disappears with the session.
 Installing into the project and committing `.claude/` is what persists.
 
-**Plugin route** (Claude Code CLI/desktop only -- `/plugin` does not exist on web):
+**Plugin route** (Claude Code CLI/desktop only -- `/plugin` does not exist on web).
+Both commands, in this order -- installing before adding the marketplace fails with an
+error that recommends the wrong fix:
 
 ```
 /plugin marketplace add opsach/seo
 /plugin install seo-geo-consultant@opsach-seo
 ```
 
+`/plugin ...` is typed at the `>` prompt inside a session; `claude plugin ...` is the
+terminal form. The two are not interchangeable, and using one in the other's place is
+the most common install failure. Note also that the marketplace is named `opsach-seo`,
+which is not the repo path -- `@opsach-seo` is the suffix `install` expects.
+
 **Verify either route** by starting a new session and typing `/seo-audit`. Commands
 and agents are loaded at session start, so an install mid-session needs a fresh one.
+
+**If anything is off**, run the doctor rather than guessing -- it inspects
+prerequisites, CLI version, registration, the files on disk, and network reach, then
+prints the exact commands that fix what it found:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/opsach/seo/main/scripts/doctor.sh | bash
+```
 
 ## 2) Open your target project
 
