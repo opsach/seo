@@ -34,7 +34,7 @@ for d in "$CLAUDE_PLUGIN_ROOT" .claude ../.claude "$HOME/.claude" $(ls -dt "$HOM
   ls "$k/scripts/seo-probe.py" "$k/skills/seo-geo-consultant/scripts/seo-probe.py" 2>/dev/null | head -1 | sed 's/^/PROBE:      /'
   exit 0
 done
-echo "PLUGIN FILES NOT FOUND"
+echo "PLUGIN FILES NOT FOUND" >&2; exit 1
 ```
 
 It prints **absolute** paths. Shell variables do not survive between tool calls, so

@@ -65,8 +65,13 @@ From a terminal you can do the same without the slash commands:
 ```bash
 claude plugin marketplace add opsach/seo
 claude plugin install seo-geo-consultant@opsach-seo
-claude plugin details seo-geo-consultant   # confirms 1 skill, 3 commands, 10 agents
+claude plugin details seo-geo-consultant   # inventory + token cost
 ```
+
+A correct install reports **Skills (4)** and **Agents (10)**. The three slash commands
+are listed under Skills — `aeo-plan`, `seo-audit`, `seo-pipeline`, alongside the
+`seo-geo-consultant` skill itself — because current Claude Code surfaces commands and
+skills in one inventory. Always-on cost is roughly 2k tokens; the rest loads on invoke.
 
 ### Install troubleshooting
 

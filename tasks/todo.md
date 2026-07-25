@@ -56,6 +56,44 @@
 ## Completed Tasks
 > Append completed tasks below with date. Do not delete.
 
+### [2026-07-25] Full install + run verification on Claude Code 2.1.220 (Mode: Light)
+
+**Requested:** check the installation, paths, README, and everything needed to install
+and run properly in Claude Code.
+
+**Verified working (all executed, not read):**
+- `claude plugin validate .` — passes, zero warnings.
+- GitHub marketplace install in an isolated `CLAUDE_CONFIG_DIR`:
+  `marketplace add opsach/seo` → `install seo-geo-consultant@opsach-seo` → `details`
+  reports Skills (4), Agents (10), ~2,044 always-on tokens.
+- `scripts/` ships in the plugin package: the probe resolves at
+  `<cache>/seo-geo-consultant/1.3.0/scripts/seo-probe.py`.
+- File resolver returns correct absolute paths in all four install layouts —
+  `CLAUDE_PLUGIN_ROOT`, `~/.claude/plugins/cache/*/seo-geo-consultant/*/`, project
+  `.claude/`, and `--user` `~/.claude/`.
+- `install.sh`: fresh install, re-run (no `skills/<skill>/<skill>` nesting), and
+  `--uninstall` (no leftovers) — all clean.
+- Inventory matches the manifests: 10 agents, 3 commands, 13 references, name/filename
+  agreement on every agent.
+- The published `main` now carries the proxy-denial fix (PR #12): installing from
+  GitHub and probing a blocked host returns exit 3, not a fabricated page audit.
+
+**Fixed this session:**
+- The resolver printed `PLUGIN FILES NOT FOUND` on stdout and **exited 0** — a silent
+  failure in the one place that must be loud, since everything downstream depends on
+  those paths. Now `>&2` and `exit 1`, in all 13 copies (10 agents, `seo-pipeline`,
+  SKILL.md, `live-site-audit.md`). Found case still exits 0.
+- README claimed `plugin details` "confirms 1 skill, 3 commands, 10 agents". CLI
+  2.1.220 prints Skills (4) / Agents (10) with commands folded into Skills, so a
+  correct install looked broken. README now states the real output.
+
+**Reported, not changed (design trade-off for the owner to decide):**
+- The shipped plugin is 868K, of which 344K is `.claude/` — byte-identical to
+  `skills/` + `agents/` + `commands/`. Every marketplace install downloads the tree
+  twice. It does not double-load (details shows 4/10, not 8/20), so this is payload
+  waste only. The mirror is what makes the committed-`.claude/` and web install paths
+  work, so removing it is a product decision, not a cleanup.
+
 ### [2026-07-25] Audit attempt on fitzers.ie → fixed a fabricated-findings bug (Mode: Light)
 
 **Requested:** full audit of `http://fitzers.ie`.
