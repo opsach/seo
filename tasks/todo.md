@@ -56,6 +56,44 @@
 ## Completed Tasks
 > Append completed tasks below with date. Do not delete.
 
+### [2026-07-25] Audit attempt on fitzers.ie → fixed a fabricated-findings bug (Mode: Light)
+
+**Requested:** full audit of `http://fitzers.ie`.
+
+**Outcome:** the audit could not run — this environment's network policy does not
+allow `fitzers.ie`, so no byte of the site was ever fetched. No findings issued.
+
+**Bug found and fixed (the real deliverable):** `seo-probe.py` mis-handled the
+egress proxy's plaintext-`http://` denial. `page` parsed the 97-byte denial notice
+as the client's homepage and reported MISSING title, 0 H1s, 0 words, no JSON-LD,
+"NEARLY EMPTY (critical)" — at exit 0. `preflight` called the same response
+"BLOCKED BY THE SITE" (exit 4), which invites the false claim that the client blocks
+Googlebot and AI crawlers. Both now return exit 3 with the host and deny reason.
+
+- `fetch()` gained `_is_proxy_denial()`, checked *before* the bot-protection
+  heuristic: an `x-deny-reason` header or an allowlist-denial phrase sets
+  `error_kind="policy"`, populates `error`, and clears the body so no caller can
+  parse it. `https://` was already correct (refused CONNECT → URLError → policy);
+  only the plaintext path was missing.
+- Untracked `scripts/__pycache__/*.pyc` and added `.gitignore` — committed bytecode
+  churned on every `verify.py` run.
+
+**What was verified:**
+- `preflight | page | robots | sitemap | redirects` against `http://fitzers.ie`:
+  all five now exit 3 with "egress proxy refused fitzers.ie (HTTP 403,
+  host_not_allowed)" and the remediation block. Pre-fix, `page` exited 0 with a
+  full fabricated table.
+- Regression on a reachable host (`https://pypi.org`): preflight exit 0, `page`
+  returns real values (HTTP 200, TTFB 71ms, title 31 chars). No false positives.
+- `redirects` shows both transports side by side — plaintext rows now match the
+  already-correct CONNECT rows.
+- `python3 scripts/verify.py` — 69 checks, 0 failed, 0 warnings.
+- `.claude/` mirror regenerated with `./scripts/install.sh --target .`, not by hand.
+
+**Blocked on the user:** allow `fitzers.ie` in the environment's network egress
+settings and start a new session, or run the audit from Claude Code CLI, or supply
+Search Console / crawl exports for owned-data mode.
+
 ### [2026-07-25] Fix install + live-site audit; add evidence toolkit (Mode: Light)
 
 **Reported problem:** "can not install plugin, can not run on client website."

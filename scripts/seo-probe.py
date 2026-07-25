@@ -217,6 +217,29 @@ def _classify(exc, url):
     return (text, "network")
 
 
+_PROXY_DENY_MARKERS = (
+    "host not in allowlist",
+    "not in the allowlist",
+    "network egress settings",
+    "blocked by network policy",
+)
+
+
+def _is_proxy_denial(headers, body):
+    """True when a 403/429 came from the egress proxy rather than the origin.
+
+    The proxy tunnels https://, so a refused CONNECT surfaces as a URLError and is
+    caught by _classify. Plaintext http:// has no tunnel to refuse, so the proxy
+    answers with an ordinary 403 whose body is the denial notice. Parsing that as
+    the origin's response turns an environment permission into fabricated findings
+    about the client's site -- a missing title, zero words, no JSON-LD.
+    """
+    if headers.get("x-deny-reason"):
+        return True
+    low = body.lower()
+    return any(m in low for m in _PROXY_DENY_MARKERS)
+
+
 def fetch(url, ua=DEFAULT_UA, timeout=20, method="GET", max_redirects=10, max_bytes=3_000_000):
     """Fetch a URL, following redirects manually so the whole chain is evidence."""
     res = Result(url)
@@ -275,7 +298,16 @@ def fetch(url, ua=DEFAULT_UA, timeout=20, method="GET", max_redirects=10, max_by
 
     res.total = time.monotonic() - started
     if res.status in (403, 429) and res.error is None:
-        blob = (res.body[:4000].decode("utf-8", "ignore") + json.dumps(res.headers)).lower()
+        head = res.body[:4000].decode("utf-8", "ignore")
+        # Proxy denial first: it must never be mistaken for the origin answering.
+        if _is_proxy_denial(res.headers, head):
+            host = urllib.parse.urlsplit(res.final_url or url).hostname or url
+            reason = res.headers.get("x-deny-reason", "host not in allowlist")
+            res.error = f"egress proxy refused {host} (HTTP {res.status}, {reason})"
+            res.error_kind = "policy"
+            res.body = b""
+            return res
+        blob = (head + json.dumps(res.headers)).lower()
         if any(m in blob for m in ("cloudflare", "captcha", "just a moment", "akamai", "perimeterx", "datadome")):
             res.error_kind = "site"
     return res
