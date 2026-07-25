@@ -30,6 +30,11 @@
    carries `scripts/doctor.sh`, which names the failing step and the exact repair
    command. Where an upstream tool's own error message points the wrong way, say so
    in the docs — do not restate it.
+7. **A diagnostic gathers evidence before it judges, and never plans two mutually
+   exclusive remedies.** Where more than one route reaches the same working state,
+   the check must first establish which route is in use — otherwise it condemns a
+   valid setup. Alternatives are shown as alternatives, never as consecutive steps
+   in a repair plan.
 
 ---
 
@@ -129,6 +134,24 @@ recalled facts.
 **Risk domain:** verification
 **Mode active:** Light
 
+## [2026-07-25] — The doctor called a healthy install broken
+
+**What happened:** `install.sh --user` installed correctly and verified clean, then
+`doctor.sh` reported "marketplace 'opsach-seo' is NOT registered", exited 1, and
+prescribed `marketplace add` + `plugin install` — which would have added a *second*
+copy of the skill, agents and commands on top of the working one.
+**Root cause:** The doctor checked marketplace registration before it checked the files
+on disk, so the marketplace section had no way to know an install already existed. It
+treated the two install routes as layers of one install rather than as alternatives.
+**Pattern:** A diagnostic whose checks run in the wrong order judges a valid
+configuration against a rule that does not apply to it — and its remedy makes things
+worse than the imagined defect.
+**Rule:** A check that can be satisfied by more than one route must establish which
+route is in use before it reports. Order the sections so evidence precedes judgement,
+and never emit two mutually exclusive remedies into one ordered plan.
+**Risk domain:** verification
+**Mode active:** Light
+
 ---
 
 ### Template
@@ -153,7 +176,7 @@ recalled facts.
 | Domain | Count | Escalated? |
 |---|---|---|
 | Scope | 0 | — |
-| Verification | 5 | Yes — Active Rules 1-6; `scripts/verify.py` enforces 1, 2, 4 and 6 |
+| Verification | 6 | Yes — Active Rules 1-7; `scripts/verify.py` enforces 1, 2, 4, 6 and 7 |
 | Planning | 0 | — |
 | Communication | 0 | — |
 | Escalation | 0 | — |

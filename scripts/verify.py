@@ -212,6 +212,18 @@ if marketplace and plugin:
     check(f'SKILL="{plugin.get("name")}"' in doctor,
           "doctor.sh plugin name matches plugin.json", plugin.get("name", "?"))
 check("exit 1" in doctor, "doctor.sh exits non-zero on problems")
+
+# The marketplace and the installer are alternative routes to the same working state.
+# The doctor must find out which one is in use before it judges registration -- when
+# the marketplace check ran first it had no such evidence, failed complete installs,
+# and prescribed a second copy on top of the working one.
+files_at = doctor.find('echo "4. Installed files"')
+market_at = doctor.find('echo "5. Marketplace and plugin registration"')
+check(files_at != -1 and market_at != -1 and files_at < market_at,
+      "doctor.sh inspects installed files before judging marketplace registration",
+      f"files at {files_at}, marketplace at {market_at}")
+check("STANDALONE_FOUND" in doctor,
+      "doctor.sh gates its marketplace verdict on whether a file install exists")
 check("raw.githubusercontent.com/opsach/seo/main/scripts/install.sh" in doctor,
       "doctor.sh points at the published installer URL")
 
