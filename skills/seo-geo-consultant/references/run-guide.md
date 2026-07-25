@@ -11,10 +11,14 @@ the root of the project you want to audit:
 curl -fsSL https://raw.githubusercontent.com/opsach/seo/main/scripts/install.sh | bash
 ```
 
-Add `-s -- --user` to install once for every project instead of one repo. Re-running
-is safe. Agents, slash commands, the skill, and the evidence probe load automatically
-from `.claude/`; commit that folder to make the pipeline available in every session
-(including web) with zero setup.
+Add `-s -- --user` to install once for every project instead of one repo, or
+`-s -- --ref BRANCH` to install from a branch or tag. Re-running is safe. Agents,
+slash commands, the skill, and the evidence probe load automatically from `.claude/`;
+commit that folder to make the pipeline available in every session with zero setup.
+
+**On Claude Code web this is the only route** -- `/plugin` does not exist there, and
+the container is ephemeral, so a `--user` install disappears with the session.
+Installing into the project and committing `.claude/` is what persists.
 
 **Plugin route** (Claude Code CLI/desktop only -- `/plugin` does not exist on web):
 
@@ -174,9 +178,9 @@ Expected output:
 - Confirm you're inside the target project folder
 - Use explicit mode language: "Run Full SEO/GEO Audit"
 
-### "`/plugin` is not a recognised command"
+### "`/plugin` isn't available in this environment"
 Expected on Claude Code web -- `/plugin` exists only in the CLI and desktop app.
-Use the installer route in section 1.
+Nothing is broken; use the installer route in section 1 instead.
 
 ### "Can't reach the client's website"
 Run `seo-probe.py preflight <origin>` and read the exit code:
