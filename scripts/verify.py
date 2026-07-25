@@ -19,6 +19,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SKILL = "seo-geo-consultant"
@@ -198,6 +199,32 @@ sh = os.path.join(ROOT, "scripts/install.sh")
 check(subprocess.run(["bash", "-n", sh], capture_output=True).returncode == 0,
       "scripts/install.sh parses")
 check(os.access(sh, os.X_OK), "scripts/install.sh is executable")
+
+# The published install command is `curl ... | bash`, where the script has no path
+# on disk: "$0" is "bash". Both checks below exercise that piped shape, because
+# running install.sh from a clone passes even when the piped form is broken.
+with open(sh, encoding="utf-8") as fh:
+    installer_src = fh.read()
+
+piped_help = subprocess.run(["bash", "-s", "--", "--help"], input=installer_src,
+                            capture_output=True, text=True)
+check(piped_help.returncode == 0 and "--uninstall" in piped_help.stdout,
+      "install.sh --help works when piped (must not read usage out of \"$0\")",
+      piped_help.stderr.strip()[:200])
+
+# A piped run must fetch from GitHub, never mistake the caller's parent directory
+# for a checkout. Decoy tree + a ref that stops the run before any network use.
+with tempfile.TemporaryDirectory() as decoy:
+    os.makedirs(os.path.join(decoy, "skills", "seo-geo-consultant"))
+    os.makedirs(os.path.join(decoy, "caller"))
+    open(os.path.join(decoy, "skills", "seo-geo-consultant", "SKILL.md"), "w").close()
+    piped = subprocess.run(["bash", "-s", "--", "--ref", "verify-py-nonexistent-ref"],
+                           input=installer_src, capture_output=True, text=True,
+                           cwd=os.path.join(decoy, "caller"))
+    chose_local = "Installing from local checkout" in piped.stdout
+check(not chose_local,
+      "piped install.sh never treats the caller's parent directory as a checkout",
+      "it installed from the decoy tree instead of fetching the requested ref")
 
 # ------------------------------------------------------- .claude mirror sync
 print("\n.claude/ mirror")

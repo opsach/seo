@@ -56,6 +56,41 @@
 ## Completed Tasks
 > Append completed tasks below with date. Do not delete.
 
+### [2026-07-25] Fixed the published `curl | bash` install path (Mode: Light)
+
+**Requested:** the two-line install command from the README
+(`cd /path/to/your/project` + `curl -fsSL .../install.sh | bash`).
+
+**Ran it as published, first, before changing anything:** it works — clone, install,
+re-run, 1 skill / 10 agents / 3 commands / 13 references / probe, exit 0. Three
+defects live in that piped shape only, which is why every previous verification (all
+run from a clone) missed them:
+
+1. **Installed from an unrelated tree.** Piped, `"$0"` is `bash`, so `dirname` gave
+   `.` and the caller's *parent* directory was treated as a local checkout. Running
+   the documented command from any directory whose parent contains
+   `skills/seo-geo-consultant/` installed from there and ignored `--ref`.
+   Fixed: the local-checkout branch requires `BASH_SOURCE`/`$0` to name a real file,
+   and an explicit `--ref` now always fetches (with a line saying so).
+2. **Partial installs persisted.** An incomplete source tree passed the single
+   `SKILL.md` guard, then died mid-copy on a raw `cp: cannot stat`, leaving a skill
+   with no agents in `.claude/`. Fixed: the whole source tree is validated up front
+   with a named remedy, and the install is staged then verified then swapped in.
+3. **`--help` was broken when piped** (`sed` against a file named `bash`). Fixed with
+   a heredoc `usage()`.
+
+**What was verified (all executed):**
+- Published command in a clean dir: exit 0, full inventory — before and after.
+- Piped from a decoy parent: now fetches from GitHub instead of the decoy.
+- Incomplete source tree: diagnosis + remedy, exit 1, **previous install intact**
+  (13 references, 10 agents), no staging leftovers.
+- Verification failure (11 references): previous install intact, exit non-zero.
+- `--ref` from inside a clone forces the fetch; `--help` piped; `--uninstall` clean.
+- `python3 scripts/verify.py` — 71 checks, 0 failed, 0 warnings; `.claude/` mirror
+  regenerated with `./scripts/install.sh --target .`, not by hand.
+- The two new `verify.py` checks were run against the **pre-fix** `install.sh` and
+  both fail there — they are regression tests, not decoration.
+
 ### [2026-07-25] Full install + run verification on Claude Code 2.1.220 (Mode: Light)
 
 **Requested:** check the installation, paths, README, and everything needed to install

@@ -23,14 +23,43 @@
    repo has.
 5. **A blocked fetch is identified by provenance, never inferred from the body.** A
    403 carrying `x-deny-reason` or an allowlist-denial phrase is exit 3 with an empty
-   body — never page content. Exercise every fetch path over both `http://` and
-   `https://`; they fail differently.
+   body — never page content.
+6. **Verify the invocation we publish, not a convenient equivalent.** Every entry
+   point has more than one shape, and they fail differently: a fetch over `http://`
+   vs `https://`, an installer run from a clone vs piped through `curl | bash`. The
+   documented form is the one users actually run — exercise it literally, and put a
+   check in `verify.py` that exercises it too.
 
 ---
 
 ## Lesson Log
 
 > Append new entries here after every correction. Never delete entries.
+
+## [2026-07-25] — The published `curl | bash` install was never the one we tested
+
+**What happened:** `install.sh` was verified repeatedly — fresh install, re-run,
+uninstall, four layouts — always by executing the file from a clone. The command the
+README publishes pipes it into `bash`, where `"$0"` is `bash`, not a path. In that
+shape `dirname "$0"` is `.`, so the script treated the **caller's parent directory**
+as a local checkout: running the documented command from any directory whose parent
+happened to contain `skills/seo-geo-consultant/` installed from that unrelated tree,
+announced "Installing from local checkout", and silently ignored `--ref`. When the
+decoy tree was incomplete the copy died mid-way on a raw `cp: cannot stat`, leaving a
+half-installed `.claude/` — a skill with no agents, which Claude Code loads happily
+and `/seo-pipeline` then fails on at runtime. `--help` was broken in the same shape:
+it ran `sed` against a file named `bash`.
+**Root cause:** The local-checkout branch keyed off a path derived from `$0` without
+first establishing that the script exists on disk. Testing only ever used the shape
+where that assumption holds.
+**Pattern:** Same shape as the `http://` vs `https://` probe bug — a path verified in
+one invocation mode, assumed to hold in the mode users actually run. Second instance,
+so Active Rule 5 was split and generalised into Rule 6.
+**Rule:** Resolve a local checkout only when `BASH_SOURCE`/`$0` names a real file;
+validate the whole source tree before copying anything; stage the install and swap it
+in only after verification, so a failure leaves the previous install intact.
+**Risk domain:** verification
+**Mode active:** Light
 
 ## [2026-07-25] — Probe audited the egress proxy's denial page as if it were the client site
 
@@ -123,7 +152,7 @@ recalled facts.
 | Domain | Count | Escalated? |
 |---|---|---|
 | Scope | 0 | — |
-| Verification | 4 | Yes — Active Rules 1-5; `scripts/verify.py` enforces 1, 2 and 4 |
+| Verification | 5 | Yes — Active Rules 1-6; `scripts/verify.py` enforces 1, 2, 4 and 6 |
 | Planning | 0 | — |
 | Communication | 0 | — |
 | Escalation | 0 | — |
