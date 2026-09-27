@@ -1,6 +1,7 @@
 ---
 description: Create a quarterly AEO measurement plan (prompt set, Share of Model, citation tracking)
 argument-hint: "[product/site name or URL]"
+allowed-tools: Read, Glob, Grep
 ---
 
 Create a quarterly AEO (Answer Engine Optimization) measurement plan using the

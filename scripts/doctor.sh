@@ -154,11 +154,11 @@ if [ -n "$FOUND" ]; then
   [ "${agents:-0}" -ge 10 ] && pass "agents: $agents (expected 10)" || {
     fail "agents: ${agents:-0} (expected 10)"
     remedy "$REINSTALL"; FILES_OK=0; }
-  [ "${cmds:-0}" -ge 3 ] && pass "commands: $cmds (expected 3)" || {
-    fail "commands: ${cmds:-0} (expected 3)"
+  [ "${cmds:-0}" -ge 4 ] && pass "commands: $cmds (expected 4)" || {
+    fail "commands: ${cmds:-0} (expected 4)"
     remedy "$REINSTALL"; FILES_OK=0; }
-  [ "${refs:-0}" -ge 13 ] && pass "references: $refs (expected 13+)" || {
-    fail "references: ${refs:-0} (expected 13+)"
+  [ "${refs:-0}" -ge 14 ] && pass "references: $refs (expected 14+)" || {
+    fail "references: ${refs:-0} (expected 14+)"
     remedy "$REINSTALL"; FILES_OK=0; }
 
   if [ -d "$FOUND/skills/$SKILL/$SKILL" ]; then
@@ -173,6 +173,16 @@ if [ -n "$FOUND" ]; then
   done
   if [ -n "$PROBE" ]; then
     pass "evidence collector: $PROBE"
+    SCAN="$(dirname "$PROBE")/seo-scan.py"
+    if [ ! -f "$SCAN" ]; then
+      warn "seo-scan.py not found next to seo-probe.py -- /seo-fix cannot score or verify"
+      remedy "$REINSTALL"
+    elif command -v python3 >/dev/null 2>&1 && ! python3 "$SCAN" --help >/dev/null 2>&1; then
+      warn "seo-scan.py is present but does not run: python3 $SCAN --help"
+      remedy "$REINSTALL"
+    else
+      pass "scanner: $SCAN"
+    fi
   else
     warn "seo-probe.py not found -- live-site audits have no evidence collector"
     remedy "$REINSTALL"

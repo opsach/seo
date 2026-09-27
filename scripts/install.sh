@@ -105,6 +105,20 @@ readiness() {
   fi
   say "  ok    seo-probe.py runs"
 
+  # The scanner imports the probe from its own directory, so it is checked in place:
+  # a copy that runs alone but cannot find its sibling would fail on the first /seo-fix.
+  scan="$(dirname "$probe")/seo-scan.py"
+  if [ ! -f "$scan" ]; then
+    say "  FAIL  seo-scan.py not found next to seo-probe.py -- /seo-fix cannot score or verify"
+    return 1
+  fi
+  if ! python3 "$scan" --help >/dev/null 2>&1; then
+    say "  FAIL  seo-scan.py did not execute: python3 $scan --help"
+    say "        re-run this installer; if it persists, open an issue with the error"
+    return 1
+  fi
+  say "  ok    seo-scan.py runs"
+
   # Network is the dependency that most often turns a good install into a failed
   # audit, and it fails per-host. Only a real preflight can tell the user which.
   if [ -n "$CHECK_HOST" ]; then
@@ -161,7 +175,8 @@ finish() {
   for l in "$@"; do say "$l"; done
   case "$rc" in
     0) say "Components load at session start -- quit Claude Code and reopen it, then try:"
-       say "  /${CMD_PREFIX}seo-audit https://example.com"
+       say "  /${CMD_PREFIX}seo-audit https://example.com   audit a live site"
+       say "  /${CMD_PREFIX}seo-fix                         fix and re-score the project you are in"
        exit 0 ;;
     2) say ""
        say "The plugin itself is installed and working -- only the host you checked is"
@@ -264,7 +279,7 @@ if [ "$MODE" = "plugin" ]; then
   ready_rc=0; readiness "$probe_path" || ready_rc=$?
   CMD_PREFIX="$SKILL:"
   finish "$ready_rc" \
-    "Installed as a Claude Code plugin (skill + 10 agents + 3 commands)." \
+    "Installed as a Claude Code plugin (skill + 10 agents + 4 commands)." \
     "Plugin commands are namespaced -- the bare /seo-audit will not resolve."
 fi
 
@@ -282,13 +297,13 @@ fi
 # ---------------------------------------------------------------- uninstall
 if [ "$MODE" = "uninstall" ]; then
   removed=0
-  for p in "$DEST/skills/$SKILL" "$DEST/scripts/seo-probe.py"; do
+  for p in "$DEST/skills/$SKILL" "$DEST/scripts/seo-probe.py" "$DEST/scripts/seo-scan.py"; do
     [ -e "$p" ] && { rm -rf "$p"; removed=1; say "removed $p"; }
   done
   for f in "$DEST"/agents/seo-*.md; do
     [ -e "$f" ] && { rm -f "$f"; removed=1; }
   done
-  for f in seo-audit.md seo-pipeline.md aeo-plan.md; do
+  for f in seo-audit.md seo-pipeline.md seo-fix.md aeo-plan.md; do
     [ -e "$DEST/commands/$f" ] && { rm -f "$DEST/commands/$f"; removed=1; }
   done
   rmdir "$DEST/scripts" 2>/dev/null || true
@@ -328,6 +343,10 @@ cp "$SRC"/commands/*.md "$DEST/commands/"
 if [ -f "$SRC/scripts/seo-probe.py" ]; then
   cp "$SRC/scripts/seo-probe.py" "$DEST/scripts/"
   chmod +x "$DEST/scripts/seo-probe.py"
+  if [ -f "$SRC/scripts/seo-scan.py" ]; then
+    cp "$SRC/scripts/seo-scan.py" "$DEST/scripts/"
+    chmod +x "$DEST/scripts/seo-scan.py"
+  fi
 else
   say "warning: this ref ($REF) predates scripts/seo-probe.py -- live-site audits will"
   say "         have no evidence collector. Install from a ref that includes it."
@@ -335,18 +354,18 @@ fi
 
 # ------------------------------------------------------------------- verify
 agents=$(ls "$DEST"/agents/seo-*.md 2>/dev/null | wc -l | tr -d ' ')
-cmds=$(ls "$DEST"/commands/{seo-audit,seo-pipeline,aeo-plan}.md 2>/dev/null | wc -l | tr -d ' ')
+cmds=$(ls "$DEST"/commands/{seo-audit,seo-pipeline,seo-fix,aeo-plan}.md 2>/dev/null | wc -l | tr -d ' ')
 refs=$(ls "$DEST/skills/$SKILL/references"/*.md 2>/dev/null | wc -l | tr -d ' ')
 [ -f "$DEST/skills/$SKILL/SKILL.md" ] || die "verification failed: SKILL.md missing after copy"
 [ "$agents" -ge 10 ] || die "verification failed: expected 10 agents, found $agents"
-[ "$cmds" -eq 3 ] || die "verification failed: expected 3 commands, found $cmds"
-[ "$refs" -ge 13 ] || die "verification failed: expected 13+ references, found $refs"
+[ "$cmds" -eq 4 ] || die "verification failed: expected 4 commands, found $cmds"
+[ "$refs" -ge 14 ] || die "verification failed: expected 14+ references, found $refs"
 say ""
 say "Installed into $DEST"
 say "  skill      1  ($SKILL, $refs references)"
 say "  agents     $agents"
-say "  commands   $cmds  (/seo-pipeline, /seo-audit, /aeo-plan)"
-say "  scripts    1  (seo-probe.py)"
+say "  commands   $cmds  (/seo-fix, /seo-audit, /seo-pipeline, /aeo-plan)"
+say "  scripts    2  (seo-probe.py, seo-scan.py)"
 say ""
 ready_rc=0; readiness "$DEST/scripts/seo-probe.py" || ready_rc=$?
 if [ "$SCOPE" = "project" ]; then

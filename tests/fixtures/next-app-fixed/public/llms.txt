@@ -1,0 +1,3 @@
+# YourBrand
+
+> Appointment scheduling software for independent clinics.

@@ -170,20 +170,25 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
-_OPENER = None
+_OPENERS = {}
+_LOOPBACK = ("localhost", "127.0.0.1", "::1", "0.0.0.0")
 
 
-def _opener():
-    global _OPENER
-    if _OPENER is None:
+def _opener(direct=False):
+    """One opener per route. `direct` skips the proxy: a local dev server is never
+    behind the egress proxy, and routing localhost through it would turn a working
+    local build into a false "blocked by network policy"."""
+    if direct not in _OPENERS:
         ctx = ssl.create_default_context()
-        handlers = [
-            _NoRedirect(),
-            urllib.request.HTTPSHandler(context=ctx),
-            urllib.request.ProxyHandler(),  # reads *_proxy env vars
-        ]
-        _OPENER = urllib.request.build_opener(*handlers)
-    return _OPENER
+        handlers = [_NoRedirect(), urllib.request.HTTPSHandler(context=ctx)]
+        handlers.append(urllib.request.ProxyHandler({} if direct else None))  # None reads *_proxy env vars
+        _OPENERS[direct] = urllib.request.build_opener(*handlers)
+    return _OPENERS[direct]
+
+
+def _is_loopback(url):
+    host = (urllib.parse.urlsplit(url).hostname or "").lower()
+    return host in _LOOPBACK or host.startswith("127.") or host.endswith(".localhost")
 
 
 def _classify(exc, url):
@@ -253,7 +258,7 @@ def fetch(url, ua=DEFAULT_UA, timeout=20, method="GET", max_redirects=10, max_by
         req.add_header("Accept-Encoding", "gzip")
         req.add_header("Accept-Language", "en-US,en;q=0.9")
         try:
-            resp = _opener().open(req, timeout=timeout)
+            resp = _opener(_is_loopback(current)).open(req, timeout=timeout)
             status, headers, stream = resp.status, resp.headers, resp
         except urllib.error.HTTPError as exc:
             status, headers, stream = exc.code, exc.headers, exc
@@ -390,6 +395,8 @@ class PageParser(HTMLParser):
                     "width": a.get("width", ""),
                     "height": a.get("height", ""),
                     "loading": a.get("loading", ""),
+                    "style": a.get("style", ""),
+                    "fill": a.get("data-nimg", "") == "fill",
                 }
             )
         elif tag == "a":
