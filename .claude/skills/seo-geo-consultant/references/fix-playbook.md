@@ -187,7 +187,8 @@ ignore lastmod that is not trustworthy. [Confidence: Standards-based -- Google
 documents that it uses lastmod only when it is consistently accurate.]
 Use a real change date (content front matter `updated`/`date`, CMS `updatedAt`,
 or `git log -1 --format=%cI -- <file>` at build time). If no honest date exists,
-**omit** lastmod rather than fake it.
+**omit** lastmod rather than fake it -- the scanner passes an absent lastmod and
+warns only on dates that are all identical.
 
 ### not-found <a name="not-found"></a>
 
@@ -232,6 +233,7 @@ Never hardcode `localhost`, a preview URL or a placeholder.
 Every indexable page needs a unique, descriptive `<title>`: primary topic first,
 brand last, 50-60 characters as a target (the scanner flags outside 15-65).
 **Write it from the page's own H1 and copy** -- no claims the page does not make.
+Check the length before writing it: `python3 <SCAN> len "Candidate title" "Candidate description"`.
 Homepage: `Brand -- what it is / for whom`. Starter titles (`Create Next App`,
 `Vite + React`, `Home`) always fail.
 

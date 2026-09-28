@@ -352,6 +352,23 @@ else
   say "         have no evidence collector. Install from a ref that includes it."
 fi
 
+# Plugin installs get ${CLAUDE_PLUGIN_ROOT} replaced by Claude Code; file installs do
+# not, and a model shown the bare placeholder tries to evaluate it in the shell --
+# which is refused headless and prompts interactively. So the installer, which
+# generates these copies anyway, writes the real root in: `.claude` for a project
+# install (relative, so a committed .claude/ works in every clone), the absolute
+# config dir for --user. Only the braced form is replaced; the resolver loop's
+# "$CLAUDE_PLUGIN_ROOT" is left alone.
+if [ "$SCOPE" = "user" ]; then ROOT_TEXT="$DEST"; else ROOT_TEXT=".claude"; fi
+root_sed="$(printf '%s' "$ROOT_TEXT" | sed 's/[#&\\]/\\&/g')"
+for md in "$DEST"/agents/seo-*.md "$DEST"/commands/*.md; do
+  [ -f "$md" ] || continue
+  sed 's#\${CLAUDE_PLUGIN_ROOT}#'"$root_sed"'#g' "$md" > "$md.tmp" && mv "$md.tmp" "$md"
+done
+find "$DEST/skills/$SKILL" -name '*.md' -type f | while IFS= read -r md; do
+  sed 's#\${CLAUDE_PLUGIN_ROOT}#'"$root_sed"'#g' "$md" > "$md.tmp" && mv "$md.tmp" "$md"
+done
+
 # ------------------------------------------------------------------- verify
 agents=$(ls "$DEST"/agents/seo-*.md 2>/dev/null | wc -l | tr -d ' ')
 cmds=$(ls "$DEST"/commands/{seo-audit,seo-pipeline,seo-fix,aeo-plan}.md 2>/dev/null | wc -l | tr -d ' ')

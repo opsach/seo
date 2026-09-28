@@ -178,7 +178,7 @@ and names the one command that removes the redundant one.
 | `unknown command 'plugin'` | Claude Code 1.x -- the plugin system is 2.x | `npm install -g @anthropic-ai/claude-code@latest` |
 | **"`/plugin` isn't available in this environment"** | Expected on Claude Code web — the command exists only in the CLI and desktop app | Use the file install. This is not a broken install |
 | A web session "forgets" the plugin next time | Web containers are ephemeral; a `--user` install lives in `~/.claude` and does not survive | Install into the project and **commit `.claude/`** — that is what persists |
-| Every run stops at "Allow Bash: for d in …?" | A file install locates its toolkit with a small shell loop, which Claude Code always asks about once | Approve it (read-only), or use the plugin route -- plugin installs get an absolute path and run the scanner with no prompt |
+| A run stops at "Allow Bash: for d in …?" | Only a `--user` file install (or a relocated `CLAUDE_CONFIG_DIR`) needs this read-only path lookup; plugin and project installs resolve their toolkit with no shell command | Approve it once, or install via the plugin route or into the project |
 | `/seo-audit` does not appear after installing | The session started before the files landed | Start a new session -- commands and agents are loaded at session start |
 | `Unknown command: /seo-audit` after a **plugin** install | Plugin commands are namespaced; the short name belongs to the file route | Type `/seo-geo-consultant:seo-audit`, or install via the file route to get the short names |
 | Agents report "plugin files not found" | Nothing installed in any of the searched locations | Re-run the installer; every agent resolves the reference and probe paths across plugin, project, and user installs |
@@ -233,12 +233,25 @@ proposed titles/descriptions, platform steps) for the client to apply.
 
 ```bash
 claude -p "/seo-fix --yes" --permission-mode acceptEdits \
-  --allowedTools "Bash(npm run build)" "Bash(npm ci)" "Bash(npx tsc --noEmit)"
+  --allowedTools "Bash(npm run build)" "Bash(npm ci)" "Bash(npx tsc --noEmit)" "Bash(npm run lint)"
 ```
+
+Add `site_url=https://client.com brand="Client Co"` to the prompt when the code does not
+contain them, and `approve=next-image,…` for any `review` items you have already
+decided -- under `--yes` nothing is ever guessed and nothing else is approved. Name every check command the
+project has (`npm test`, `pnpm lint`, …) in `--allowedTools`; a command left out is
+refused, and the report records it as unverified.
 
 `--permission-mode acceptEdits` lets it edit files; `--allowedTools` names the build
 commands your project needs. The scanner and probe are pre-approved by the command
 itself.
+
+**Verified end to end** (headless, Claude Code 2.1.283, Sep 2026): a broken Next.js
+15.5 app went **3.1 -> 9.7/10** in one unattended `/seo-fix --yes` run, then **10.0/10**
+after a second run supplied the icon and approved `next-image` -- rebuilt and
+re-scored independently each time. A static site went 2.1 -> 8.4 under `--yes`,
+stopping exactly at the items that need a person (a blanket `Disallow: /`, missing
+image assets).
 
 **What 10/10 means:** every applicable check passes on the rendered site. It is a
 measure of technical SEO/GEO readiness, not a ranking prediction -- content quality,
@@ -307,6 +320,7 @@ seo-scan.py score   . --html dist --save                # score a static build, 
 seo-scan.py score   . --serve "npx next start -p 4319" --url http://localhost:4319 --compare
 seo-scan.py score   https://client.com                  # live site, no code
 seo-scan.py imgsize public/hero.png                     # intrinsic size for width/height fixes
+seo-scan.py len "Candidate title" "Candidate description"   # fits the 15-65 / 70-165 bands?
 ```
 
 Each of the 32 checks reports pass/warn/fail with evidence and **the file to fix** --

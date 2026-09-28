@@ -152,6 +152,12 @@ def main():
     keys = scan.top_level_keys("{ title: { default: 'A', template: '%s | B' }, description: 'x, y', ...rest }")
     ok(set(keys) == {"title", "description", "..."}, "JS object keys parse at depth 1 only", str(keys))
     ok(scan.literal("'x, y'") == "x, y" and scan.literal("`a ${b}`") is None, "string literals vs computed values")
+    ok(scan.sitemap_lastmod_finding([("https://a.com/x", None)] * 3, "s", "rendered").status == "pass",
+       "an omitted lastmod passes (the playbook's honest option)")
+    ok(scan.sitemap_lastmod_finding([("https://a.com/x", "2026-01-01")] * 3, "s", "rendered").status == "warn",
+       "identical lastmod on every URL warns (build-time stamps)")
+    out = subprocess.run([sys.executable, SCAN, "len", "x" * 60, "y" * 150], capture_output=True, text=True).stdout
+    ok("| 60 | fits | short |" in out and "| 150 | long | fits |" in out, "len reports the title/description bands")
     svg = os.path.join(FIX, "static-fixed", "img", "team.svg")
     ok(scan.image_size(svg) == (640, 360), "imgsize reads SVG dimensions")
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as fh:

@@ -345,6 +345,11 @@ check('cp "$SRC/scripts/seo-scan.py"' in installer, "install.sh ships seo-scan.p
 check('python3 "$scan" --help' in installer, "install.sh proves seo-scan.py executes")
 check('"$DEST/scripts/seo-scan.py"' in installer, "install.sh --uninstall removes seo-scan.py")
 check("seo-fix.md" in installer, "install.sh counts and removes the /seo-fix command")
+check("ROOT_TEXT" in installer and "CLAUDE_PLUGIN_ROOT}#" in installer,
+      "install.sh writes the real toolkit root into file-installed copies")
+leftover = [os.path.relpath(os.path.join(dp, f), ROOT) for dp, _, fs in os.walk(os.path.join(ROOT, ".claude"))
+            for f in fs if f.endswith(".md") and "${CLAUDE_PLUGIN_ROOT}" in read(os.path.relpath(os.path.join(dp, f), ROOT))]
+check(not leftover, "no file-installed copy shows the unexpanded plugin-root placeholder", ", ".join(leftover[:5]))
 check('python3 "$SCAN" --help' in doctor, "doctor.sh checks the scanner runs")
 
 # ------------------------------------------------------------- scanner + playbook
@@ -386,9 +391,14 @@ else:
     drift = []
     for src, dst in pairs:
         dst_abs = os.path.join(ROOT, dst)
+        # install.sh writes the project-install root into the one placeholder a
+        # file install cannot resolve; everything else must be byte-identical.
+        want = read(src)
+        if src.endswith(".md"):
+            want = want.replace("${CLAUDE_PLUGIN_ROOT}", ".claude")
         if not os.path.isfile(dst_abs):
             drift.append(f"{dst} missing")
-        elif read(src) != read(dst):
+        elif want != read(dst):
             drift.append(f"{dst} differs from {src}")
     check(not drift, ".claude/ mirror matches source",
           "; ".join(drift[:6]) + (" …" if len(drift) > 6 else ""))

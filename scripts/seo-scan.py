@@ -29,6 +29,7 @@ Usage:
                       [--compare [FILE]]     show the change against a saved result
                       [--json]               machine-readable output
   seo-scan.py imgsize FILE [FILE ...]        intrinsic width x height (png/jpg/gif/webp/svg)
+  seo-scan.py len TEXT [TEXT ...]            character count vs the title and description bands
 
 Exit codes:
   0  ok (a low score is a result, not an error)
@@ -738,8 +739,10 @@ def sitemap_lastmod_finding(entries, where, basis):
     if not entries:
         return Finding("unknown", ["sitemap has no <url> entries to inspect"], [where], basis=basis)
     if not lastmods:
-        return Finding("warn", [f"{len(entries)} URLs, none with <lastmod>"], [where],
-                       "No recrawl signal. Add real change dates, or omit lastmod rather than fake it.", basis)
+        # Omitting lastmod is the honest choice when no real change date exists
+        # (fix-playbook.md#sitemap-lastmod) -- it must not score below a fake one.
+        return Finding("pass", [f"{len(entries)} URLs, no <lastmod>"], [where],
+                       "No recrawl hint; add real change dates when the content has them.", basis)
     days = {lm[:10] for lm in lastmods}
     if len(entries) >= 3 and len(set(lastmods)) == 1:
         return Finding("warn", [f"all {len(entries)} URLs share lastmod {lastmods[0]}"], [where],
@@ -2001,7 +2004,7 @@ def render_compare(before, after):
     return "\n".join(L)
 
 
-def build_result(target, project, rendered, rendered_rc_note=None):
+def build_result(target, project, rendered):
     source = {}
     surfaces = []
     facts = {}
@@ -2122,7 +2125,7 @@ def cmd_detect(args):
         out = recipe["dir"]
         print(f"- Then score the output: `seo-scan.py score {p.root} --html {os.path.join(p.root, out) if out != '.' else p.root}`")
     elif recipe.get("serve"):
-        print(f"- Then score the built site (the scanner starts and stops the server itself):")
+        print("- Then score the built site (the scanner starts and stops the server itself):")
         print(f"  `seo-scan.py score {p.root} --serve \"{recipe['serve']}\" --url {recipe['url']}`")
     else:
         print(f"- No local build for this stack: score {recipe.get('url')} with `--url`.")
@@ -2145,7 +2148,6 @@ def cmd_detect(args):
 def cmd_score(args):
     target = args.target
     project = rendered = None
-    rc_note = None
     if is_url(target):
         rendered, rc, err = url_evidence(target, args.pages, args.timeout)
         if rc:
@@ -2184,7 +2186,7 @@ def cmd_score(args):
             rendered = html_dir_evidence(args.html)
         elif project.stack == "static":
             rendered = html_dir_evidence(project.root)
-    res = build_result(os.path.abspath(target) if not is_url(target) else target, project, rendered, rc_note)
+    res = build_result(os.path.abspath(target) if not is_url(target) else target, project, rendered)
     key = res["target"]
     before = None
     if args.compare is not None:
@@ -2260,6 +2262,17 @@ def image_size(path):
     return None
 
 
+def cmd_len(args):
+    """Check candidate titles/descriptions before writing them into the code."""
+    rows = []
+    for t in args.texts:
+        n = len(t)
+        rows.append([trunc(t, 70), n, "fits" if 15 <= n <= 65 else ("short" if n < 15 else "long"),
+                     "fits" if 70 <= n <= 165 else ("short" if n < 70 else "long")])
+    print(md_table(["Text", "Chars", "As title (15-65)", "As description (70-165)"], rows))
+    return 0
+
+
 def cmd_imgsize(args):
     rc = 0
     for f in args.files:
@@ -2291,6 +2304,8 @@ def main(argv=None):
     s.add_argument("--compare", nargs="?", const="", default=None, metavar="FILE")
     i = sub.add_parser("imgsize", help="intrinsic image dimensions")
     i.add_argument("files", nargs="+")
+    ln = sub.add_parser("len", help="character counts against the title/description bands")
+    ln.add_argument("texts", nargs="+")
     args = ap.parse_args(argv)
     if not args.command:
         ap.print_help()
@@ -2298,7 +2313,8 @@ def main(argv=None):
     if args.command == "score":
         args.pages = max(1, min(100, args.pages))
     try:
-        return {"detect": cmd_detect, "score": cmd_score, "imgsize": cmd_imgsize}[args.command](args)
+        return {"detect": cmd_detect, "score": cmd_score, "imgsize": cmd_imgsize,
+                "len": cmd_len}[args.command](args)
     except KeyboardInterrupt:
         return 130
 

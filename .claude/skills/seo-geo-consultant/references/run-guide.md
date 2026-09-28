@@ -79,8 +79,14 @@ Hands-off (CI or a scripted batch of client repos):
 
 ```bash
 claude -p "/seo-fix --yes" --permission-mode acceptEdits \
-  --allowedTools "Bash(npm run build)" "Bash(npm ci)" "Bash(npx tsc --noEmit)"
+  --allowedTools "Bash(npm run build)" "Bash(npm ci)" "Bash(npx tsc --noEmit)" "Bash(npm run lint)"
 ```
+
+Add `site_url=https://client.com brand="Client Co"` to the prompt when the code does not
+contain them, and `approve=next-image,…` for any `review` items you have already
+decided -- under `--yes` nothing is ever guessed and nothing else is approved. Name every check command the
+project has (`npm test`, `pnpm lint`, …) in `--allowedTools`; a command left out is
+refused, and the report records it as unverified.
 
 The command pre-approves only its own scanner and probe; file edits follow your
 permission mode, and build commands need naming in `--allowedTools`.
