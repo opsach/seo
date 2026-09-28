@@ -39,10 +39,11 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
+  // No title/description here: Next.js fills og:title/og:description (and the
+  // twitter:* equivalents) from each page's own title and description. A title set
+  // here would be inherited by every page that does not override openGraph.
   openGraph: {
-    title: 'YourBrand - One-line value prop',
-    description: 'Your OG description (can differ from meta description)',
-    url: 'https://yourdomain.com',
+    url: './',
     siteName: 'YourBrand',
     images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'YourBrand' }],
     locale: 'en_US',
@@ -50,10 +51,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'YourBrand',
-    description: 'Your Twitter card description',
-    creator: '@yourhandle',
-    images: ['/og-default.png'],
+    creator: '@yourhandle',   // only with a real handle
   },
   robots: {
     index: true,
@@ -67,10 +65,18 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: '/',
+    // './' resolves to each route's own URL. Never '/' here: every page that does
+    // not override alternates would declare the homepage as its canonical.
+    canonical: './',
   },
 }
 ```
+
+> Verified on Next.js 15.5 (Sep 2026) by building and fetching the pages:
+> `canonical: './'` and `openGraph.url: './'` in the root layout render
+> `https://yourdomain.com/about` on `/about`; `canonical: '/'` renders the homepage URL
+> on every page. With `openGraph` set but no `openGraph.title`, `/about` renders
+> `og:title` and `twitter:title` from its own `title`.
 
 ### Dynamic Page Metadata
 
@@ -321,7 +327,12 @@ app/
 
 ### Per-Page OG Configuration
 
-OG and Twitter metadata do NOT inherit from parent title/description. Always set them explicitly in `generateMetadata` or static `metadata` exports. See the dynamic metadata example in section 1.
+With the root layout above (an `openGraph` object without `title`/`description`),
+Next.js fills `og:title`, `og:description` and the `twitter:*` equivalents from each
+page's own `title` and `description` -- a page only needs its own `openGraph` when it
+changes something else, e.g. `type: 'article'` plus `publishedTime` on a blog post
+(see the dynamic metadata example in section 1). A page that sets its own `openGraph`
+object replaces the inherited one, so include `images` again there if needed.
 
 ---
 

@@ -1,7 +1,7 @@
 {
   "name": "seo-geo-consultant",
-  "description": "Senior SEO and GEO (Generative Engine Optimization) consultant. Audits, strategizes, and implements technical SEO, structured data, content optimization, and AI search visibility for web applications.",
-  "version": "1.5.0",
+  "description": "Senior SEO and GEO (Generative Engine Optimization) consultant. Audits, scores, fixes, and verifies technical SEO, structured data, content metadata, and AI search visibility for web applications -- /seo-fix takes a codebase toward 10/10 and proves it with a before/after re-score.",
+  "version": "1.6.0",
   "author": {
     "name": "opsach"
   },
@@ -16,6 +16,8 @@
     "ai-search",
     "nextjs",
     "site-audit",
-    "llms-txt"
+    "llms-txt",
+    "seo-fix",
+    "seo-score"
   ]
 }

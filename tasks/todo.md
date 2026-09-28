@@ -56,6 +56,77 @@
 ## Completed Tasks
 > Append completed tasks below with date. Do not delete.
 
+### [2026-09-27] /seo-fix: score, fix and prove it on a client codebase (Mode: Light)
+
+**Requested:** "optimise project, push to 10/10, fix all that I can run easily on the
+client website using Claude Code, to the best of your abilities."
+
+**Gap found:** the plugin could audit and install reliably, but fixing a client site
+meant the full pipeline, a manual approval step, and no measurement of the result.
+Codebase audits had no deterministic evidence at all, and "10/10" was a subjective
+GEO score.
+
+**Built:**
+- NEW `scripts/seo-scan.py` (stdlib only, imports seo-probe's parser): `detect` (stack
+  for Next.js app/pages, Vite, CRA, Astro, Nuxt, SvelteKit, Gatsby, Remix, Docusaurus,
+  Eleventy, Hugo, Jekyll, WordPress, Shopify, static; render recipe; SEO surfaces;
+  facts with source lines), `score` (32 checks -> score /10 per category, fix plan
+  split auto / input / review, file to fix per finding, score reachable after fixes),
+  rendered evidence from a build dir (`--html`) or a server it starts, crawls and
+  always stops (`--serve` + `--url`), `--save`/`--compare` with regression flags,
+  `imgsize`, `len`.
+- NEW `commands/seo-fix.md` -- detect -> baseline -> one round of questions -> fix ->
+  build + re-score --compare -> `seo-fix-report.md`; `--dry-run`, `--yes`, `--only`,
+  `key=value` facts, `approve=` for review items; URL-only fix-pack mode.
+- NEW `references/fix-playbook.md` -- per-check, per-stack recipes, fix classes, facts,
+  order of operations, verification.
+- NEW `scripts/shared/toolkit.md` + `scripts/sync-shared.py` -- the locate-the-toolkit
+  block, generated into 15 files; honours `CLAUDE_CONFIG_DIR`; uses the substituted
+  `${CLAUDE_PLUGIN_ROOT}` (plugin) or the root install.sh writes in (file installs).
+- NEW `scripts/test-scan.py` + `tests/fixtures/` (static-fixed must score 10.0,
+  static-broken, next-app-broken, next-app-fixed, vite-spa) -- 76 assertions incl. a
+  real HTTP crawl via `--serve`.
+- Commands pre-approve only the scanner/probe (and read-only git) via `allowed-tools`.
+- Fixed `nextjs-implementation.md`: root `canonical: '/'` and root `openGraph.title`
+  (both verified harmful on a real build) -> `'./'` and title-less openGraph.
+- seo-fix-engineer, discovery and all auditors use the scanner; SKILL.md mode 7;
+  README/run-guide/CLAUDE.md/AGENTS.md; install.sh/doctor.sh ship and check
+  seo-scan.py and 4 commands; plugin.json 1.5.0 -> 1.6.0; verify.py 96 -> 128 checks.
+
+**What was verified (executed, CLI 2.1.283):**
+- Next.js 15.5.4 real builds: root `canonical: '/'` renders `href="/"` on /about;
+  `'./'` renders each page's own URL; root openGraph without title -> each page's
+  og:title/twitter:title come from its own title.
+- `allowed-tools: Bash(python3 *seo-scan.py *)` pre-approves the scanner (negative
+  control without it: "This command requires approval").
+- `${CLAUDE_PLUGIN_ROOT}` is substituted in plugin commands, skills and agents (not
+  unbraced `$CLAUDE_PLUGIN_ROOT`, not file installs).
+- Plugin install from a local marketplace: Skills (5), Agents (10), ~2.1k always-on.
+- Headless `/seo-fix` end to end:
+  - Next.js, file route, `--yes site_url brand`: **3.1 -> 9.7/10** rendered; tsc +
+    build pass; independently rebuilt and re-scored 9.7. Left: favicon (fact),
+    next-image (review). 109 turns.
+  - Same app, second run `--yes icon=public/logo.png approve=next-image`:
+    **9.7 -> 10.0/10**, 32/32 checks scored (29 rendered), baseline saved before the
+    first edit, 41 turns / $0.79. Independently rebuilt: tsc + build pass, 10.0.
+  - Static site, file route, `--yes`: **2.1 -> 8.4/10**; left exactly the items that
+    need a human (icon, og image, approval of a blanket `Disallow: /`). 56 turns on
+    the first wording -> 26 turns after the fixes below.
+  - Vite SPA, plugin route, `--dry-run`: correct plan (3.0, ceiling 8.5, prerendering
+    flagged as review); only denial was an `ls` the wording now forbids.
+  - Static, file route, `--dry-run`, default permissions: **0 denials**, 7 turns.
+- Fixed from those runs: resolver refused headless (placeholder evaluation) ->
+  installer writes the root; agent skipped the baseline -> "save the baseline before
+  the first edit" + no-stash fallback; `python3 -c` length checks prompted -> `len`;
+  lastmod omission was penalised against the playbook's own advice -> passes.
+
+**Noted for follow-up:**
+- [ ] `--plugin` installs from GitHub `main`; these changes reach plugin users after merge.
+- [ ] Astro/Nuxt/SvelteKit/Gatsby/Hugo/Jekyll source analysis is heuristic; rendered
+  evidence is authoritative -- a real-build fixture per stack would harden it.
+- [ ] Fix-pack (URL-only) mode is specified but has not had a headless run against a
+  reachable live site.
+
 ### [2026-07-25] Seamless install + run in Claude Code CLI (Mode: Light)
 
 **Requested:** "seamless run and installation in claude cli, can you fix this" — after a

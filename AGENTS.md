@@ -4,7 +4,8 @@
 > read that file for the full operating instructions for this repository.
 
 **This repository is the SEO & GEO Consultant plugin for Claude Code** — a
-documentation/skill knowledge pack. No application code, build, or tests.
+skill knowledge pack plus stdlib-only Python tooling (`scripts/`). No build; the
+test suite is `python3 scripts/verify.py`.
 
 ## Startup Sequence
 

@@ -11,6 +11,7 @@ This plugin gives Claude deep expertise in:
 - **Generative Engine Optimization (GEO)** -- Making your content visible in ChatGPT, Perplexity, Google AI Overviews, and Bing Copilot
 - **Multi-Stack Implementation** -- Production-ready guidance for Next.js (App Router Metadata API), React SPAs (Vite/CRA with react-helmet-async and prerendering), WordPress, Shopify, and site builders
 - **Client Deliverables** -- Standardized audit reports with severity/priority matrices, 30/60/90 roadmaps, confidence-tiered claims, and quarterly AEO measurement
+- **One-command fixing with proof** -- `/seo-fix` scores the site out of 10, fixes everything safely fixable in the code, rebuilds, and re-scores to show the before/after
 - **Multi-Agent Audit Pipeline** -- 10 specialist subagents that run like corporate departments (discovery, technical, on-page, schema, performance, GEO, content strategy, competitive intel, roadmap, implementation) and merge into one prioritized roadmap
 
 ## When It Triggers
@@ -39,7 +40,8 @@ Quit Claude Code and reopen it (components load at session start), then inside t
 session:
 
 ```
-/seo-geo-consultant:seo-audit https://yourclient.com
+/seo-geo-consultant:seo-audit https://yourclient.com     # audit a live site
+/seo-geo-consultant:seo-fix                              # in the client's repo: fix + prove it
 ```
 
 That installs for **your user account**, so it works in every project. Prefer the
@@ -69,8 +71,8 @@ appears in `claude plugin list`, then checks that `python3` and the evidence pro
 really execute. Re-running it is a no-op on an already-installed plugin.
 
 > **Plugin commands are namespaced.** After this route the commands are
-> `/seo-geo-consultant:seo-audit`, `/seo-geo-consultant:seo-pipeline`, and
-> `/seo-geo-consultant:aeo-plan`. The bare `/seo-audit` returns *"Unknown command"* --
+> `/seo-geo-consultant:seo-fix`, `/seo-geo-consultant:seo-audit`,
+> `/seo-geo-consultant:seo-pipeline`, and `/seo-geo-consultant:aeo-plan`. The bare `/seo-audit` returns *"Unknown command"* --
 > that is the namespace, not a broken install. The file route below is the one that
 > gives you the short names.
 
@@ -81,11 +83,12 @@ curl -fsSL https://raw.githubusercontent.com/opsach/seo/main/scripts/install.sh 
 ```
 
 Run it from the root of the project you want to audit. It copies the skill, the 10
-agents, the 3 slash commands, and the evidence probe into that project's `.claude/`
-directory. Claude Code auto-loads `.claude/` -- no `/plugin` command, which the web
-does not have. Commands keep their short names here: `/seo-audit`, `/seo-pipeline`,
-`/aeo-plan`. **Commit `.claude/`** and every future session on that repo -- CLI,
-desktop, or web -- gets the full pipeline with zero setup.
+agents, the 4 slash commands, and the two stdlib-only tools (`seo-probe.py`,
+`seo-scan.py`) into that project's `.claude/` directory. Claude Code auto-loads
+`.claude/` -- no `/plugin` command, which the web does not have. Commands keep their
+short names here: `/seo-fix`, `/seo-audit`, `/seo-pipeline`, `/aeo-plan`.
+**Commit `.claude/`** and every future session on that repo -- CLI, desktop, or web --
+gets the full pipeline with zero setup.
 
 ### Confirm a client site is reachable before you audit it
 
@@ -140,10 +143,10 @@ repo path you pass to `marketplace add`. `@opsach-seo` is the suffix `install` w
 
 </details>
 
-A correct install reports **Skills (4)** and **Agents (10)**. The three slash commands
-are listed under Skills — `aeo-plan`, `seo-audit`, `seo-pipeline`, alongside the
-`seo-geo-consultant` skill itself — because current Claude Code surfaces commands and
-skills in one inventory. Always-on cost is roughly 2k tokens; the rest loads on invoke.
+A correct install reports **Skills (5)** and **Agents (10)**. The four slash commands
+are listed under Skills — `aeo-plan`, `seo-audit`, `seo-fix`, `seo-pipeline`, alongside
+the `seo-geo-consultant` skill itself — because current Claude Code surfaces commands
+and skills in one inventory. Always-on cost is roughly 2k tokens; the rest loads on invoke.
 
 Verified end to end against `github.com/opsach/seo` on Claude Code CLI 2.1.220.
 
@@ -175,6 +178,7 @@ and names the one command that removes the redundant one.
 | `unknown command 'plugin'` | Claude Code 1.x -- the plugin system is 2.x | `npm install -g @anthropic-ai/claude-code@latest` |
 | **"`/plugin` isn't available in this environment"** | Expected on Claude Code web — the command exists only in the CLI and desktop app | Use the file install. This is not a broken install |
 | A web session "forgets" the plugin next time | Web containers are ephemeral; a `--user` install lives in `~/.claude` and does not survive | Install into the project and **commit `.claude/`** — that is what persists |
+| A run stops at "Allow Bash: for d in …?" | Only a `--user` file install (or a relocated `CLAUDE_CONFIG_DIR`) needs this read-only path lookup; plugin and project installs resolve their toolkit with no shell command | Approve it once, or install via the plugin route or into the project |
 | `/seo-audit` does not appear after installing | The session started before the files landed | Start a new session -- commands and agents are loaded at session start |
 | `Unknown command: /seo-audit` after a **plugin** install | Plugin commands are namespaced; the short name belongs to the file route | Type `/seo-geo-consultant:seo-audit`, or install via the file route to get the short names |
 | Agents report "plugin files not found" | Nothing installed in any of the searched locations | Re-run the installer; every agent resolves the reference and probe paths across plugin, project, and user installs |
@@ -186,14 +190,78 @@ and verifies the result, with no marketplace, no registration, and no CLI involv
 Contributors can additionally check a clone with:
 
 ```bash
-python3 scripts/verify.py    # validates manifests, frontmatter, references, mirrors
+python3 scripts/verify.py        # manifests, frontmatter, references, mirrors, scanner tests
+python3 scripts/sync-shared.py   # regenerate the shared toolkit block after editing scripts/shared/
 ```
+
+## Fix a client site in one command
+
+Open Claude Code in the client's repository and run:
+
+```
+/seo-fix                    # plugin install: /seo-geo-consultant:seo-fix
+```
+
+What happens:
+
+1. **Detect** -- `seo-scan.py detect` identifies the stack (Next.js, Vite/CRA, Astro,
+   Nuxt, SvelteKit, Gatsby, Hugo, Jekyll, Eleventy, WordPress/Shopify themes, static
+   HTML) and finds the facts already in the code: site URL, brand, language, logo,
+   social profiles.
+2. **Baseline** -- builds the site and scores the **real rendered HTML** out of 10
+   across 32 deterministic checks (crawl & index, metadata, on-page, structured data,
+   social, AI search, performance hygiene). For server-rendered stacks the scanner
+   starts the site's own server, crawls it, and stops it.
+3. **One round of questions** -- only for facts it could not find (production URL,
+   brand name) and approval for risky items (e.g. a `robots.txt` that blocks Google).
+4. **Fix** -- every `auto` item without asking, following `fix-playbook.md` for the
+   detected stack: titles and descriptions written from each page's own content,
+   canonicals, Open Graph, JSON-LD, robots.txt, sitemap, llms.txt, alt text, image
+   dimensions, heading structure. Never invented facts, never build output, never
+   visual changes.
+5. **Prove it** -- typecheck/lint/tests/build, then a re-score with `--compare`:
+   every worked check must flip to pass, and regressions are flagged.
+6. **Report** -- `seo-fix-report.md`: score before -> after, every change by file,
+   verification results, and what still needs a fact, an approval, or content work.
+
+Nothing is committed; review with `git diff`. `--dry-run` stops after the plan,
+`--yes` never asks (for CI), `--only canonical,title` restricts the run. Given a URL
+with no codebase, `/seo-fix` writes a **fix pack** (robots.txt, llms.txt, JSON-LD,
+proposed titles/descriptions, platform steps) for the client to apply.
+
+**Run it hands-off (headless or CI):**
+
+```bash
+claude -p "/seo-fix --yes" --permission-mode acceptEdits \
+  --allowedTools "Bash(npm run build)" "Bash(npm ci)" "Bash(npx tsc --noEmit)" "Bash(npm run lint)"
+```
+
+Add `site_url=https://client.com brand="Client Co"` to the prompt when the code does not
+contain them, and `approve=next-image,…` for any `review` items you have already
+decided -- under `--yes` nothing is ever guessed and nothing else is approved. Name every check command the
+project has (`npm test`, `pnpm lint`, …) in `--allowedTools`; a command left out is
+refused, and the report records it as unverified.
+
+`--permission-mode acceptEdits` lets it edit files; `--allowedTools` names the build
+commands your project needs. The scanner and probe are pre-approved by the command
+itself.
+
+**Verified end to end** (headless, Claude Code 2.1.283, Sep 2026): a broken Next.js
+15.5 app went **3.1 -> 9.7/10** in one unattended `/seo-fix --yes` run, then **10.0/10**
+after a second run supplied the icon and approved `next-image` -- rebuilt and
+re-scored independently each time. A static site went 2.1 -> 8.4 under `--yes`,
+stopping exactly at the items that need a person (a blanket `Disallow: /`, missing
+image assets).
+
+**What 10/10 means:** every applicable check passes on the rendered site. It is a
+measure of technical SEO/GEO readiness, not a ranking prediction -- content quality,
+authority and off-site presence are reported separately as work for humans.
 
 ## What's Included
 
 ### Skill: `seo-geo-consultant`
 
-**6 workflow modes:**
+**7 workflow modes:**
 
 1. **Full SEO/GEO Audit** -- Reads your codebase and produces a prioritized report with GEO readiness scoring
 2. **Content Page Optimization** -- Optimizes landing pages, blog posts, and marketing content for both Google and AI search
@@ -201,15 +269,17 @@ python3 scripts/verify.py    # validates manifests, frontmatter, references, mir
 4. **GEO Optimization** -- Comprehensive strategy for AI search visibility (on-site and off-site)
 5. **Live Site Audit** -- URL-only audits for prospects, clients, and competitors when you don't have code access
 6. **Keyword & Content Strategy** -- Intent-mapped keyword targets, topic clusters, and content briefs
+7. **Fix Everything Fixable** -- The `/seo-fix` loop: score, fix, rebuild, re-score
 
 ### Slash Commands
 
+- `/seo-fix [path or URL] [--dry-run] [--yes] [--only ids]` -- fix everything safely fixable, verify against the rendered site, report the score before and after
 - `/seo-pipeline [URL or path] [goal] [competitor URLs]` -- run the full multi-agent department pipeline end to end
 - `/seo-audit [URL or path]` -- run a full single-session audit of the current project, or a URL-only live audit
-
-After a **plugin** install these are namespaced: `/seo-geo-consultant:seo-audit`, and
-so on. A file install keeps the short names shown above.
 - `/aeo-plan [product or URL]` -- generate a quarterly AEO measurement plan
+
+After a **plugin** install these are namespaced: `/seo-geo-consultant:seo-fix`, and
+so on. A file install keeps the short names shown above.
 
 ### Agent Pipeline (10 department subagents)
 
@@ -237,6 +307,30 @@ analytics, or backlink exports into a `seo-data/` folder in the audited project 
 the departments use them to verify findings at scale (labeled **data-backed** vs
 **inferred**). No data? The pipeline runs exactly the same and tells you which
 exports would be most valuable next cycle. See `owned-data-guide.md`.
+
+### Scanner and scorer: `scripts/seo-scan.py`
+
+`seo-probe.py` measures what a live URL serves; `seo-scan.py` measures a **codebase and
+its build output** and turns the result into a fix plan. Standard library only; it
+imports the probe's HTML parser so the two never disagree.
+
+```bash
+seo-scan.py detect  .                                   # stack, build recipe, SEO surfaces, facts
+seo-scan.py score   . --html dist --save                # score a static build, keep a baseline
+seo-scan.py score   . --serve "npx next start -p 4319" --url http://localhost:4319 --compare
+seo-scan.py score   https://client.com                  # live site, no code
+seo-scan.py imgsize public/hero.png                     # intrinsic size for width/height fixes
+seo-scan.py len "Candidate title" "Candidate description"   # fits the 15-65 / 70-165 bands?
+```
+
+Each of the 32 checks reports pass/warn/fail with evidence and **the file to fix** --
+rendered pages are mapped back to their source route files for Next.js, Astro,
+SvelteKit, Nuxt and Gatsby. Every failure carries a fix class: `auto` (safe to fix),
+`input` (needs a business fact such as the production URL), or `review` (changes
+behaviour, needs approval). The scorecard also states the score reachable after the
+`auto` + `input` fixes, so the gap to 10/10 is explicit. Regression tests pin its
+verdicts against fixture projects (`python3 scripts/test-scan.py`), including a
+correct site that must score exactly 10.0.
 
 ### Evidence Toolkit: `scripts/seo-probe.py`
 
@@ -285,6 +379,7 @@ only and never cite it as evidence for a tag-level finding.
 - `audit-report-template.md` -- Standardized SEO/GEO audit output format with severity, impact/effort prioritization, and 30/60/90 roadmap
 - `evidence-policy.md` -- Confidence-tier and evidence-quality policy to prevent overconfident GEO/AEO claims
 - `owned-data-guide.md` -- Optional client-data ingestion (GSC, Screaming Frog, CrUX/PSI, analytics, backlinks) via a `seo-data/` folder, with data-backed vs inferred evidence labeling and graceful degradation when no data is provided
+- `fix-playbook.md` -- Per-check, per-stack fix recipes for every `seo-scan.py` check: fix class, facts needed, order of operations, verification, and the URL-only fix pack
 - `run-guide.md` -- Step-by-step guide to run audits, AEO planning, and implementation workflows in Claude Code
 
 
@@ -323,7 +418,7 @@ python3 .claude/scripts/seo-probe.py preflight https://client.com
 
 | Exit | Meaning | What to do |
 |---|---|---|
-| 0 | Fetching works | Run `/seo-audit https://client.com` or `/seo-pipeline https://client.com` |
+| 0 | Fetching works | Run `/seo-audit https://client.com`, `/seo-pipeline https://client.com`, or `/seo-fix https://client.com` for a fix pack |
 | 3 | **Blocked by network policy** | The sandbox refused the connection before it left the machine -- see below |
 | 4 | **The site blocks bots** | Report it as a finding; AI crawlers are refused the same way. Never work around bot protection |
 | 5 | Unreachable | DNS, TLS, or timeout -- confirm the domain with the client |
@@ -377,11 +472,14 @@ This plugin teaches Claude about:
 > Build a keyword and content plan with topic clusters for my product
 
 > Fix the SEO on my client's WordPress site
+
+> /seo-fix            (then review `git diff` and seo-fix-report.md)
 ```
 
 ## Credits
 
-Originally based on [seo-geo-consultant by AndreasH96](https://github.com/AndreasH96/seo-geo-consultant) (MIT). This fork adds the AEO measurement framework, evidence/confidence policy, audit report template, run guide, live-site audit workflow, keyword/content strategy, React SPA and WordPress/Shopify implementation guides, site-migration and local SEO checklists, LocalBusiness schema support, slash commands, plugin packaging, the `seo-probe.py` evidence collector, and the
+Originally based on [seo-geo-consultant by AndreasH96](https://github.com/AndreasH96/seo-geo-consultant) (MIT). This fork adds the AEO measurement framework, evidence/confidence policy, audit report template, run guide, live-site audit workflow, keyword/content strategy, React SPA and WordPress/Shopify implementation guides, site-migration and local SEO checklists, LocalBusiness schema support, slash commands, plugin packaging, the `seo-probe.py` evidence collector, the
+`seo-scan.py` scorer and `/seo-fix` loop with its fix playbook, and the
 installer/verifier scripts.
 
 ## License

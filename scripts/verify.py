@@ -22,7 +22,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SKILL = "seo-geo-consultant"
-EXPECTED_COMMANDS = {"seo-audit.md", "seo-pipeline.md", "aeo-plan.md"}
+EXPECTED_COMMANDS = {"seo-audit.md", "seo-pipeline.md", "seo-fix.md", "aeo-plan.md"}
 
 failures: list[str] = []
 warnings: list[str] = []
@@ -144,12 +144,43 @@ for f in cmd_files:
 
 # ------------------------------------------------- shared resolver / evidence
 print("\nShared blocks")
-RESOLVER_MARK = 'for d in "$CLAUDE_PLUGIN_ROOT" .claude ../.claude "$HOME/.claude"'
+RESOLVER_MARK = 'for d in "$CLAUDE_PLUGIN_ROOT" .claude ../.claude "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"'
 FETCHERS = {"seo-discovery", "seo-tech-auditor", "seo-onpage-auditor",
             "seo-schema-auditor", "seo-performance-auditor", "seo-geo-auditor",
             "seo-competitor-analyst"}
 no_resolver = [f for f in agent_files if RESOLVER_MARK not in read(f"agents/{f}")]
 check(not no_resolver, "every agent carries the file resolver", ", ".join(no_resolver))
+TOOL_CMDS = {"seo-audit.md", "seo-pipeline.md", "seo-fix.md"}
+no_block = [f for f in sorted(TOOL_CMDS) if RESOLVER_MARK not in read(f"commands/{f}")]
+check(not no_block, "every toolkit-using command carries the file resolver", ", ".join(no_block))
+
+# The locate-the-toolkit block exists in 15 files. It is generated from one source by
+# scripts/sync-shared.py (Active Rule 1); a hand edit to one copy is drift.
+sync = subprocess.run([sys.executable, os.path.join(ROOT, "scripts", "sync-shared.py"), "--check"],
+                      capture_output=True, text=True)
+check(sync.returncode == 0, "shared toolkit blocks match scripts/shared/toolkit.md",
+      (sync.stdout + sync.stderr).strip())
+toolkit = read("scripts/shared/toolkit.md")
+# Plugin installs substitute ${CLAUDE_PLUGIN_ROOT} in command, skill and agent text
+# (verified CLI 2.1.283), which gives an absolute path with no shell expansion -- the
+# only form an allowed-tools rule can pre-approve.
+check("`${CLAUDE_PLUGIN_ROOT}`" in toolkit, "toolkit block states the substituted plugin root")
+check("${CLAUDE_CONFIG_DIR:-$HOME/.claude}" in toolkit,
+      "toolkit resolver honours CLAUDE_CONFIG_DIR (Active Rule 9)")
+check('SCAN:' in toolkit and 'PROBE:' in toolkit and 'REFERENCES:' in toolkit,
+      "toolkit resolver prints all three paths")
+
+# Commands that run the scripts must pre-approve exactly those scripts, or every run
+# stops at a permission prompt and headless runs are refused outright.
+for f in sorted(TOOL_CMDS):
+    cfm = frontmatter(read(f"commands/{f}"), f"commands/{f}") or {}
+    tools = cfm.get("allowed-tools", "")
+    check("Bash(python3 *seo-scan.py *)" in tools and "Bash(python3 *seo-probe.py *)" in tools,
+          f"commands/{f} pre-approves the scanner and probe", tools or "(no allowed-tools)")
+fixcmd = frontmatter(read("commands/seo-fix.md"), "commands/seo-fix.md") or {}
+check(not re.search(r"\b(Edit|Write)\b", fixcmd.get("allowed-tools", "")),
+      "/seo-fix leaves edit approval to the user's permission mode",
+      fixcmd.get("allowed-tools", ""))
 no_rules = [f for f in sorted(FETCHERS)
             if "Evidence Rules (non-negotiable)" not in read(f"agents/{f}.md")]
 check(not no_rules, "every fetching agent carries the evidence rules", ", ".join(no_rules))
@@ -174,7 +205,7 @@ print("\nREADME consistency")
 readme = read("README.md")
 readme_refs = sorted(set(re.findall(r"`([a-z0-9-]+\.md)`", readme)))
 # Files the plugin *writes* rather than ships, plus its own docs.
-ARTIFACTS = {"SKILL.md", "seo-audit-report.md", "CLAUDE.md", "AGENTS.md", "README.md"}
+ARTIFACTS = {"SKILL.md", "seo-audit-report.md", "seo-fix-report.md", "CLAUDE.md", "AGENTS.md", "README.md"}
 readme_missing = [r for r in readme_refs
                   if r not in actual_refs and r not in cmd_files and r not in ARTIFACTS]
 check(not readme_missing, "README names no reference file that is missing",
@@ -188,7 +219,8 @@ for agent in sorted(agent_names):
 
 # ----------------------------------------------------------------- scripts
 print("\nScripts")
-for rel in ("scripts/seo-probe.py", "scripts/verify.py"):
+for rel in ("scripts/seo-probe.py", "scripts/seo-scan.py", "scripts/verify.py",
+            "scripts/sync-shared.py", "scripts/test-scan.py"):
     path = os.path.join(ROOT, rel)
     ok = subprocess.run([sys.executable, "-m", "py_compile", path],
                         capture_output=True).returncode == 0
@@ -307,6 +339,37 @@ check("WANT_INSTALL" in installer,
 check('MODE="check"' in installer,
       "install.sh has a check-only mode that installs nothing")
 
+# The scanner imports the probe from its own directory and /seo-fix depends on both,
+# so every install route must ship them together and prove the scanner runs.
+check('cp "$SRC/scripts/seo-scan.py"' in installer, "install.sh ships seo-scan.py")
+check('python3 "$scan" --help' in installer, "install.sh proves seo-scan.py executes")
+check('"$DEST/scripts/seo-scan.py"' in installer, "install.sh --uninstall removes seo-scan.py")
+check("seo-fix.md" in installer, "install.sh counts and removes the /seo-fix command")
+check("ROOT_TEXT" in installer and "CLAUDE_PLUGIN_ROOT}#" in installer,
+      "install.sh writes the real toolkit root into file-installed copies")
+leftover = [os.path.relpath(os.path.join(dp, f), ROOT) for dp, _, fs in os.walk(os.path.join(ROOT, ".claude"))
+            for f in fs if f.endswith(".md") and "${CLAUDE_PLUGIN_ROOT}" in read(os.path.relpath(os.path.join(dp, f), ROOT))]
+check(not leftover, "no file-installed copy shows the unexpanded plugin-root placeholder", ", ".join(leftover[:5]))
+check('python3 "$SCAN" --help' in doctor, "doctor.sh checks the scanner runs")
+
+# ------------------------------------------------------------- scanner + playbook
+print("\nScanner and fix playbook")
+playbook = read(f"skills/{SKILL}/references/fix-playbook.md")
+scan_src = read("scripts/seo-scan.py")
+check_ids = re.findall(r'^    "([a-z0-9-]+)": \("(?:crawl|meta|content|schema|social|geo|perf)"', scan_src, re.M)
+check(len(check_ids) >= 30, "scanner check registry parses", str(len(check_ids)))
+no_recipe = [c for c in check_ids if f'<a name="{c}">' not in playbook]
+check(not no_recipe, "fix-playbook.md has a recipe anchor for every scanner check", ", ".join(no_recipe))
+orphan = [a for a in re.findall(r'<a name="([a-z0-9-]+)">', playbook) if a not in check_ids]
+check(not orphan, "every playbook anchor is a real scanner check", ", ".join(orphan))
+tests = subprocess.run([sys.executable, os.path.join(ROOT, "scripts", "test-scan.py")],
+                       capture_output=True, text=True)
+tail = [l for l in tests.stdout.splitlines() if "FAIL" in l or "passed" in l]
+check(tests.returncode == 0, "scanner regression tests pass (scripts/test-scan.py)",
+      "; ".join(tail[-6:]) or tests.stderr[-300:])
+check("/seo-fix" in read("README.md") and "seo-scan.py" in read("README.md"),
+      "README documents /seo-fix and seo-scan.py")
+
 # ------------------------------------------------------- .claude mirror sync
 print("\n.claude/ mirror")
 mirror = os.path.join(ROOT, ".claude")
@@ -323,13 +386,19 @@ else:
             src = os.path.relpath(os.path.join(dirpath, f), ROOT)
             pairs.append((src, os.path.join(".claude", src)))
     pairs.append(("scripts/seo-probe.py", ".claude/scripts/seo-probe.py"))
+    pairs.append(("scripts/seo-scan.py", ".claude/scripts/seo-scan.py"))
 
     drift = []
     for src, dst in pairs:
         dst_abs = os.path.join(ROOT, dst)
+        # install.sh writes the project-install root into the one placeholder a
+        # file install cannot resolve; everything else must be byte-identical.
+        want = read(src)
+        if src.endswith(".md"):
+            want = want.replace("${CLAUDE_PLUGIN_ROOT}", ".claude")
         if not os.path.isfile(dst_abs):
             drift.append(f"{dst} missing")
-        elif read(src) != read(dst):
+        elif want != read(dst):
             drift.append(f"{dst} differs from {src}")
     check(not drift, ".claude/ mirror matches source",
           "; ".join(drift[:6]) + (" …" if len(drift) > 6 else ""))

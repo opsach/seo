@@ -42,12 +42,74 @@
 9. **A configurable root is resolved through its override, never hardcoded to its
    default.** `${CLAUDE_CONFIG_DIR:-$HOME/.claude}` once, reused everywhere; searches
    that could legitimately match either location check both.
+10. **A code recipe is verified by rendering it, not by reading it.** Anything a
+    reference tells Claude to ship into a client site is built and its output
+    inspected; the reference records the version and date. Scanner fixtures pin it.
+11. **Shared text is generated.** Blocks several files carry verbatim live in
+    `scripts/shared/` and are written by `scripts/sync-shared.py` (Rule 1, applied to
+    instructions).
+12. **Every command is run headless once.** `claude -p` with the documented flags;
+    permission denials in the result are bugs. The command pre-approves its own tools
+    with narrow `allowed-tools` patterns, proven with a negative control.
 
 ---
 
 ## Lesson Log
 
 > Append new entries here after every correction. Never delete entries.
+
+## [2026-09-27] — The Next.js reference taught a canonical that deindexes every inner page
+
+**What happened:** `nextjs-implementation.md` recommended `alternates: { canonical: '/' }`
+in the root layout, and a root `openGraph.title`. Building a real Next.js 15.5 app and
+fetching `/about` showed `<link rel="canonical" href="/">`: every page that does not
+override `alternates` inherits the homepage canonical and tells search engines it is a
+duplicate. The root `openGraph.title` likewise stamps one og:title on every page. The
+plugin's own fix engineer would have shipped both into client sites.
+**Root cause:** The code recipes were written from memory of the API and reviewed by
+reading, never by rendering. Metadata inheritance is invisible in source; it only shows
+in the HTML the server sends.
+**Pattern:** A recipe verified by reading is a claim about behaviour nobody observed --
+the same shape as auditing a page through a summariser instead of fetching its bytes.
+**Rule:** Every code recipe a reference tells Claude to ship is verified by building it
+and inspecting the rendered output, and the reference says so (version + date). The
+scanner's fixtures pin the verified behaviour (`next-app-broken` / `next-app-fixed`).
+**Risk domain:** verification
+**Mode active:** Light
+
+## [2026-09-27] — The toolkit resolver broke Active Rule 9 in 13 hand-copied places
+
+**What happened:** The locate-the-toolkit loop in every agent, the pipeline command, the
+skill and the live-audit reference searched `$HOME/.claude` but never
+`$CLAUDE_CONFIG_DIR`. Rule 9 had been applied to `install.sh` and `doctor.sh` only, so
+agents on a relocated config dir reported "plugin files not found" on a working install.
+**Root cause:** The block existed as 13 hand-maintained copies. The rule was fixed where
+the bug was reported, and the copies were not one thing that could be fixed once.
+**Pattern:** Active Rule 1 again -- a duplicate without a generator drifts, here from a
+*rule* rather than from source.
+**Rule:** Text that several files must carry verbatim lives once in `scripts/shared/`
+and is written into marked blocks by `scripts/sync-shared.py`; `verify.py` fails on any
+drift.
+**Risk domain:** verification
+**Mode active:** Light
+
+## [2026-09-27] — Instructions that work interactively are refused headless
+
+**What happened:** Every command began with the resolver loop. Interactively that is one
+approval prompt; under `claude -p` (CI, batch runs over client repos) it is refused
+outright -- "Contains simple_expansion" -- and an end-to-end `/seo-fix` run spent seven
+tool calls working around it.
+**Root cause:** Commands were verified by typing them in a session, where a permission
+prompt looks like a formality. Headless mode turns every prompt into a failure.
+**Pattern:** A path verified in one execution mode assumed to hold in another -- the
+http/https and plugin/file-route lessons, now for interactive vs headless.
+**Rule:** Run each command once headless with the flags the docs publish, and read the
+permission denials in the result. Anything the command itself needs goes in its
+`allowed-tools` as a narrow pattern (verified with a negative control), and paths are
+given in a form that needs no shell expansion (`${CLAUDE_PLUGIN_ROOT}` is substituted in
+plugin text; a project install is found with the Glob tool).
+**Risk domain:** verification
+**Mode active:** Light
 
 ## [2026-07-25] — Every doc told plugin users to type a command that does not exist
 
@@ -225,7 +287,7 @@ and never emit two mutually exclusive remedies into one ordered plan.
 | Domain | Count | Escalated? |
 |---|---|---|
 | Scope | 0 | — |
-| Verification | 8 | Yes — Active Rules 1-9; `scripts/verify.py` enforces 1, 2, 4, 6, 7, 8 and 9 |
+| Verification | 11 | Yes — Active Rules 1-12; `scripts/verify.py` enforces 1, 2, 4, 6, 7, 8, 9, 11 and 12, and `scripts/test-scan.py` pins 10 |
 | Planning | 0 | — |
 | Communication | 0 | — |
 | Escalation | 0 | — |

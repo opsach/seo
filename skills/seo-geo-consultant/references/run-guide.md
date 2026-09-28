@@ -61,6 +61,44 @@ prints the exact commands that fix what it found:
 curl -fsSL https://raw.githubusercontent.com/opsach/seo/main/scripts/doctor.sh | bash
 ```
 
+## 1b) The fastest path: fix a client repo in one command
+
+Open Claude Code in the client's repository and run `/seo-fix`
+(`/seo-geo-consultant:seo-fix` after a plugin install). It detects the stack, builds
+the site, scores the rendered HTML out of 10, asks once for any missing facts and
+approvals, fixes everything safely fixable per `references/fix-playbook.md`, rebuilds,
+and re-scores with a before/after diff. It writes `seo-fix-report.md` and commits
+nothing -- review with `git diff`.
+
+- `--dry-run` -- scorecard and plan only
+- `--yes` -- never ask; skip anything that needs a missing fact or an approval
+- `--only canonical,title` -- limit the run to those checks
+- a URL instead of a repo -- writes a fix pack for the client to apply
+
+Hands-off (CI or a scripted batch of client repos):
+
+```bash
+claude -p "/seo-fix --yes" --permission-mode acceptEdits \
+  --allowedTools "Bash(npm run build)" "Bash(npm ci)" "Bash(npx tsc --noEmit)" "Bash(npm run lint)"
+```
+
+Add `site_url=https://client.com brand="Client Co"` to the prompt when the code does not
+contain them, and `approve=next-image,…` for any `review` items you have already
+decided -- under `--yes` nothing is ever guessed and nothing else is approved. Name every check command the
+project has (`npm test`, `pnpm lint`, …) in `--allowedTools`; a command left out is
+refused, and the report records it as unverified.
+
+The command pre-approves only its own scanner and probe; file edits follow your
+permission mode, and build commands need naming in `--allowedTools`.
+
+Score a project yourself at any time:
+
+```bash
+python3 .claude/scripts/seo-scan.py detect .
+python3 .claude/scripts/seo-scan.py score . --html dist          # after a static build
+python3 .claude/scripts/seo-scan.py score . --serve "npx next start -p 4319" --url http://localhost:4319
+```
+
 ## 2) Open your target project
 
 Start Claude Code in the repo you want to audit (your website/app codebase), then invoke the skill using a clear request.
@@ -132,8 +170,9 @@ Expected output:
 
 ## Shortcut: slash commands
 
-If installed as a plugin, three commands wrap the most common workflows:
+If installed as a plugin, four commands wrap the most common workflows:
 
+- `/seo-fix [path or URL]` -- fix everything safely fixable, verify, report before/after
 - `/seo-pipeline [URL or path] [goal] [competitors]` -- full multi-agent department pipeline
 - `/seo-audit [URL or path]` -- full single-session audit (codebase or URL-only)
 - `/aeo-plan [product or URL]` -- quarterly AEO measurement plan
@@ -162,7 +201,8 @@ What happens, stage by stage:
 2. Five audit departments run in parallel: technical, on-page, schema, performance, GEO/AEO
 3. `seo-content-strategist` (and `seo-competitor-analyst` if competitors were given) build on the audit findings
 4. `seo-roadmap-director` merges everything into `seo-audit-report.md` -- deduplicated, priority-scored, 30/60/90 roadmap, plus a data-coverage line and a consolidated data request for the next cycle
-5. You approve items; `seo-fix-engineer` implements them in the codebase
+5. You approve items; `seo-fix-engineer` implements them in the codebase, maps each to
+   a scanner check, and proves the result with a `--compare` re-score
 
 Each department can also be invoked directly for single-domain questions, e.g.
 "Use the seo-geo-auditor agent to check our AI search readiness."
@@ -230,6 +270,15 @@ Run `seo-probe.py preflight <origin>` and read the exit code:
 
 Whatever the cause, do not accept an audit that continues past a failed preflight:
 its findings were not measured.
+
+### "The build fails before any fix"
+`/seo-fix` records a pre-existing build failure, does not touch unrelated code, and
+scores from source instead -- which is heuristic, and the report says so. Fix the
+build (or install dependencies) and re-run for rendered evidence.
+
+### "`--serve` says the port already answers"
+Another server holds that port -- often a dev server you left running. The scanner
+refuses rather than measure the wrong build (exit 7). Stop it or use another port.
 
 ### "Output is too generic"
 - Ask the model to use `references/audit-report-template.md` exactly

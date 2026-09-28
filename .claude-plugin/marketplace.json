@@ -4,13 +4,13 @@
     "name": "opsach"
   },
   "metadata": {
-    "description": "SEO & GEO consulting plugins for Claude Code: full-site audits, AI search visibility (GEO/AEO), structured data, multi-stack implementation, and a 10-agent audit pipeline."
+    "description": "SEO & GEO consulting plugins for Claude Code: one-command fixing with before/after scoring, full-site audits, AI search visibility (GEO/AEO), structured data, multi-stack implementation, and a 10-agent audit pipeline."
   },
   "plugins": [
     {
       "name": "seo-geo-consultant",
       "source": "./",
-      "description": "Senior SEO/GEO consultant skill: full audits, AEO measurement, structured data, Next.js technical SEO, and AI search visibility."
+      "description": "Senior SEO/GEO consultant: /seo-fix scores a site out of 10, fixes what the code allows, and proves it; plus full audits, AEO measurement, structured data, and AI search visibility."
     }
   ]
 }

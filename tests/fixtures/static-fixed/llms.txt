@@ -1,0 +1,7 @@
+# YourBrand
+
+> Appointment scheduling software for independent clinics.
+
+## Key pages
+- [Home](https://yourbrand.com/): online booking, text reminders and an automatic waitlist
+- [About](https://yourbrand.com/about/): why YourBrand exists
